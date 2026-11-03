@@ -260,6 +260,7 @@ details.src a{color:var(--accent);word-break:break-all}
           <button type="button" data-view="side">側面（南）</button>
           <button type="button" data-view="back">背面（東）</button>
           <button type="button" data-view="bird">鳥瞰</button>
+          <button type="button" data-view="gate">門まわり</button>
         </div>
         <label class="check" id="syncWrap" hidden><input type="checkbox" id="sync" checked> 2画面の視点を連動</label>
         <label class="check"><input type="checkbox" id="legendChk" checked> 凡例</label>
@@ -351,7 +352,7 @@ details.src a{color:var(--accent);word-break:break-all}
         <div class="sec-h"><h2>門柱</h2><span class="cur" id="cur-gate"></span></div>
         <label class="check"><input type="checkbox" id="gateChk" checked> 門柱を表示する</label>
         <div class="colors" data-cat="gate"></div>
-        <p class="note">ガレージ左の道路側に置いています（幅45cm・高さ1.6m）。表札・インターホン・ポスト・門灯付きのイメージです。</p>
+        <p class="note">ガレージ左の道路側に置いています。幅65cm・高さ1.35mの機能門柱（インターホン・表札・大型ポスト）と、飾り柱3本のセットです。色は本体と飾り柱に反映され、笠木とポストは黒のままです。</p>
       </section>
     </aside>
   </main>
@@ -957,13 +958,16 @@ function buildHouse(roofType) {
   wallRegion(B, GF, 0, G.open0 - G.x0, 0, G.top, [], 'garage');
   B('soffit').quad(v(G.x0, G.top, -0.15), v(G.x1, G.top, -0.15), v(G.x1, G.top, G.z1), v(G.x0, G.top, G.z1), v(0, -1, 0), X, Z, O0);
   B('gfloor').quad(v(G.x0, 0.004, 0), v(G.x1, 0.004, 0), v(G.x1, 0.004, G.z1), v(G.x0, 0.004, G.z1), Y, X, Z, O0);
-  // 門柱（ガレージ左、道路側）
-  const GX = 0.45, GZ = 1.6, GW = 0.45, GH = 1.6, GD = 0.2, fz = GZ + GD / 2;
-  B('gate').box(v(GX, GH / 2, GZ), X, Y, Z, GW, GH, GD);
-  B('gateMetal').box(v(GX, 1.36, fz + 0.005), X, Y, Z, 0.28, 0.08, 0.012);   // 表札
-  B('gateMetal').box(v(GX, 1.12, fz + 0.015), X, Y, Z, 0.1, 0.15, 0.03);     // インターホン
-  B('gateMetal').box(v(GX, 0.92, fz + 0.008), X, Y, Z, 0.3, 0.05, 0.016);    // ポスト投函口
-  B('gateLight').box(v(GX, GH - 0.06, fz + 0.02), X, Y, Z, 0.32, 0.03, 0.04); // 門灯
+  // 門柱（ガレージ左、道路側）：機能門柱＋飾り柱3本（参考写真の形状）
+  const GW = 0.65, GH = 1.35, GD = 0.2, GX = 0.875, GZ = 1.62, fz = GZ + GD / 2, gl = GX - GW / 2;
+  B('gate').box(v(GX, GH / 2, GZ), X, Y, Z, GW, GH, GD);                                 // 本体
+  B('gateDark').box(v(GX, GH + 0.012, GZ), X, Y, Z, GW + 0.02, 0.024, GD + 0.02);         // 笠木
+  B('gateDark').box(v(GX, 1.035, fz + 0.007), X, Y, Z, 0.4, 0.13, 0.014);                 // ポスト投函口
+  B('gateDark').box(v(GX, 0.655, fz + 0.007), X, Y, Z, 0.4, 0.57, 0.014);                 // ポスト扉
+  B('gateMetal').box(v(GX - 0.16, 1.2, fz + 0.012), X, Y, Z, 0.085, 0.115, 0.024);        // インターホン
+  B('gateDark').box(v(GX + 0.1, 1.22, fz + 0.004), X, Y, Z, 0.2, 0.028, 0.008);           // 表札
+  for (const k of [1, 2, 3]) B('gate').box(v(gl - 0.15 - (k - 1) * 0.185, GH / 2, GZ), X, Y, Z, 0.1, GH, 0.1); // 飾り柱
+  B('gateBed').quad(v(gl - 0.6, 0.009, GZ - 0.25), v(gl, 0.009, GZ - 0.25), v(gl, 0.009, GZ + 0.25), v(gl - 0.6, 0.009, GZ + 0.25), Y, X, Z, O0); // 砂利
   trims(B);
   if (roofType === 'hip') roofHip(B); else roofMono(B);
   const out = {}; for (const k in Bs) out[k] = Bs[k].geo();
@@ -1013,6 +1017,7 @@ const VIEWS = {
   side:  { pos: [26, 4.5, -D / 2], tgt: [W / 2, 4.5, -D / 2], need: 1.45 },
   back:  { pos: [W / 2 - 7, 2.2, -D - 15], tgt: [W / 2, 4.6, -D / 2 - 1], need: 0.95 },
   bird:  { pos: [17, 17, 13], tgt: [W / 2, 3.4, -D / 2 + 1], need: 1.25 },
+  gate:  { pos: [3.6, 1.5, 6.2], tgt: [0.9, 1.0, 0.6], need: 1.0 },
 };
 
 function makeMats() {
@@ -1028,7 +1033,8 @@ function makeMats() {
     handle: std({ color: '#1c1c1e', roughness: 0.3, metalness: 0.8 }),
     gate: std({ roughness: 0.55, metalness: 0.15 }),
     gateMetal: std({ color: '#b9bcbe', roughness: 0.3, metalness: 0.85 }),
-    gateLight: std({ color: '#fff6e0', emissive: '#ffe2a8', emissiveIntensity: 1.6 }),
+    gateDark: std({ color: '#2b2c2e', roughness: 0.45, metalness: 0.35 }),
+    gateBed: std({ color: '#c3beb3', roughness: 1 }),
   };
   m.trim2 = m.sash; m.trim3 = m.sash;
   for (const k of [...ZONE_KEYS, 'door']) m[k].normalScale = new THREE.Vector2(1, 1);
@@ -1176,7 +1182,7 @@ class Viewer {
     if (S.mode === 'compare' && S.edit !== this.side) { S.edit = this.side; refreshUI(); }
     if (!hit) return;
     const k = hit.object.userData.key;
-    const map = { f1: 'f1', f2: 'f2', f3: 'f3', garage: 'garage', balc: 'balc', sash: 'sash', trim2: 'sash', trim3: 'sash', glass: 'sash', soffit: 'soffit', roof: 'roof', fascia: 'roof', door: 'door', handle: 'door', gate: 'gate', gateMetal: 'gate', gateLight: 'gate' };
+    const map = { f1: 'f1', f2: 'f2', f3: 'f3', garage: 'garage', balc: 'balc', sash: 'sash', trim2: 'sash', trim3: 'sash', glass: 'sash', soffit: 'soffit', roof: 'roof', fascia: 'roof', door: 'door', handle: 'door', gate: 'gate', gateMetal: 'gate', gateDark: 'gate', gateBed: 'gate' };
     const target = map[k]; if (!target) return;
     if (ZONES.some(z => z[0] === target)) { S.zone = target; refreshUI(); focusSection(document.getElementById('secWall')); }
     else focusSection(document.querySelector(`.colors[data-cat="${target}"]`).closest('.sec'));
