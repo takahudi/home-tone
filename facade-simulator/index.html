@@ -168,14 +168,38 @@ details.add summary{cursor:pointer;font-size:12.5px;font-weight:500}
 .modal-actions p{margin:0;font-size:12px;color:var(--muted)}
 .modal-actions a{text-decoration:none}
 
+.sheet{width:min(560px,100%);gap:12px}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sheet-h h2{margin:0;font-size:16px;letter-spacing:.06em}
+.steps{margin:0;padding:0;list-style:none;counter-reset:st;display:grid;gap:10px}
+.steps li{counter-increment:st;position:relative;padding-left:36px;font-size:13px;line-height:1.65}
+.steps li::before{content:counter(st);position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--on-accent);
+  display:grid;place-items:center;font-size:12px;font-weight:700;font-family:var(--font-mono)}
+.steps b{display:block;font-size:13.5px}
+.steps em{font-style:normal;font-weight:500;color:var(--accent)}
+details.src summary{cursor:pointer;font-size:12.5px;font-weight:500}
+details.src ul{margin:8px 0;padding-left:18px;font-size:12px;display:grid;gap:3px}
+details.src a{color:var(--accent);word-break:break-all}
+
 @media (max-width: 900px){
   html,body{height:auto}
   .app{height:auto}
   .main{display:block}
-  .stage-wrap{padding-right:max(16px,env(safe-area-inset-right,0px))}
-  .stage{height:66vh;min-height:420px;flex:none}
-  .panel{border-left:0;border-top:1px solid var(--line);overflow:visible}
+  .bar{padding-block:8px}
+  .brand h1{font-size:15px}
+  .stage-wrap{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;
+    padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line)}
+  .toolbar{margin-bottom:8px;gap:6px 10px}
+  .toolbar .lbl{display:none}
+  .views{flex-wrap:nowrap;overflow-x:auto;width:100%;scrollbar-width:none;padding-bottom:2px}
+  .views button{flex:none}
+  .stage{height:44vh;min-height:280px;flex:none}
+  .stage.compare{height:48vh}
+  .legend{font-size:10.5px;padding:5px 8px;max-height:96px;overflow:auto}
+  .panel{border-left:0;overflow:visible}
   .hint{display:none}
+  .modal{place-items:end center;padding-bottom:0}
+  .sheet{border-radius:14px 14px 0 0;max-height:88vh;padding-bottom:max(16px,env(safe-area-inset-bottom,0px))}
 }
 @media (prefers-reduced-motion: reduce){ .viewer{transition:none} }
 </style>
@@ -198,6 +222,7 @@ details.add summary{cursor:pointer;font-size:12.5px;font-weight:500}
         <button type="button" data-mode="single" aria-pressed="true">1画面</button>
         <button type="button" data-mode="compare" aria-pressed="false">2画面で比較</button>
       </div>
+      <button type="button" class="btn" id="helpBtn" aria-haspopup="dialog">使い方</button>
       <button type="button" class="btn primary" id="snapBtn">画像にする</button>
     </div>
   </header>
@@ -253,7 +278,7 @@ details.add summary{cursor:pointer;font-size:12.5px;font-weight:500}
         </div>
         <div class="filters" id="filters"></div>
         <div class="grid" id="wallGrid"></div>
-        <p class="note">品番付きの2点（AH5935U・AH5933U）は外観パース資料に記載のケイミュー製品です。その他は柄と色のイメージ見本です。実際に検討中の品番は下の「外壁材を登録」から追加できます。画面の色は実物と異なるため、最終決定は実物サンプルでご確認ください。</p>
+        <p class="note">ケイミューの公開情報から、品番・色名を確認できた外壁材を収録しています（「資料記載」は外観パース資料の採用品）。品番がない色は、色名は確認できたものの色別の品番が見つからなかったものです。画面の色は色名からの近似色なので、最終決定は実物サンプルで確認してください。載っていない品番は「外壁材を登録」で追加できます。</p>
         <details class="add">
           <summary>外壁材を登録（品番・色を入力）</summary>
           <form class="form" id="addForm">
@@ -310,6 +335,27 @@ details.add summary{cursor:pointer;font-size:12.5px;font-weight:500}
   </div>
 </div>
 
+<div class="modal" id="help" hidden role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box sheet">
+    <div class="sheet-h"><h2 id="helpTitle">使い方</h2><button type="button" class="btn small" id="closeHelp">閉じる</button></div>
+    <ol class="steps">
+      <li><b>塗る場所を選ぶ</b>「外壁」の <em>3階・2階・1階・ガレージ</em> から1つタップ。パースの壁を直接タップしても選べます。</li>
+      <li><b>外壁材を選ぶ</b>下の一覧から材をタップ。<em>レジェール／光セラ18／光セラ16／SOLIDO</em> で絞り込めます。全部の階を同じ材にするときは「この材を1〜3階すべてに」。</li>
+      <li><b>窓枠・軒天・屋根・ドア</b>色の丸をタップ。虹色の丸を押すと好きな色を指定できます。屋根は片流れ／寄棟を切り替えられます。</li>
+      <li><b>2案を比べる</b>「2画面で比較」を押すと A・B が並びます。「編集中」でどちらを変えるか選び、「A の内容を B にコピー」で叩き台を作ると早いです。</li>
+      <li><b>見る角度を変える</b>指1本で回転、2本指でズーム・移動。視点ボタンで正面・側面・鳥瞰に切り替え。2画面は視点が連動します。</li>
+      <li><b>画像にして残す</b>「画像にする」で材料の一覧付き画像を作成。スマホは画像を長押しして保存します。</li>
+      <li><b>カタログの品番を足す</b>一覧にない材は「外壁材を登録」で品番・柄・色を入れて追加（このブラウザに保存）。</li>
+    </ol>
+    <p class="note">スマホでは、パースを上に固定したまま下のパネルをスクロールできます。選んだ結果をすぐ確認できます。</p>
+    <details class="src">
+      <summary>収録した外壁材の出典</summary>
+      <ul id="srcList"></ul>
+      <p class="note">2026年11月時点の公開情報から集めたものです。廃番・地域による品番違いがあるため、発注前にケイミューの最新カタログで確認してください。</p>
+    </details>
+  </div>
+</div>
+
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -350,32 +396,63 @@ const OPENINGS = [
 /* =========================================================
    外壁材・各部材の候補
    ========================================================= */
-const PATTERNS = { stone: 'ストーン', border: 'ボーダー', flat: 'フラット', wood: '木目', tile: 'タイル', vline: '縦ライン' };
+const PATTERNS = { stone: 'ストーン（石積み）', border: '横ライン', vline: '縦ライン', wood: '木目', tile: 'タイル', lap: 'ラップ（羽目板）', flat: 'フラット' };
+const SERIES = ['レジェール', '光セラ18', '光セラ16', 'SOLIDO'];
+// 品番・色名はケイミュー公開情報（公式サイト・建材データベース）より。表示色は色名からの近似色。
 const WALLS = [
-  { id: 'AH5935U', code: 'AH5935U', name: 'レジェール ピアレスストーン QFマックス チタンホワイト', pat: 'stone', colors: ['#f0f0ec', '#f5f5f2', '#e9e8e4'], v: 0.07, doc: true },
-  { id: 'AH5933U', code: 'AH5933U', name: 'レジェール ピアレスストーン QFチャコール チタンブラック', pat: 'stone', colors: ['#3d3d3f', '#313133', '#4b4b4d'], v: 0.22, doc: true },
-  { id: 'stone-greige', name: 'ストーン グレージュ', pat: 'stone', colors: ['#bcb4a9', '#aaa197', '#cac3b9'], v: 0.12 },
-  { id: 'stone-beige', name: 'ストーン ベージュミックス', pat: 'stone', colors: ['#d8c8ac', '#c5b192', '#e4d8c4'], v: 0.12 },
-  { id: 'stone-gray', name: 'ストーン ミストグレー', pat: 'stone', colors: ['#9d9e9c', '#8a8b8a', '#b0b1af'], v: 0.12 },
-  { id: 'border-white', name: 'ボーダー ホワイト', pat: 'border', colors: ['#f1f0ec'], v: 0.08 },
-  { id: 'border-lgray', name: 'ボーダー ライトグレー', pat: 'border', colors: ['#c5c6c4'], v: 0.1 },
-  { id: 'border-navy', name: 'ボーダー ネイビー', pat: 'border', colors: ['#2d3747'], v: 0.18 },
-  { id: 'border-black', name: 'ボーダー ブラック', pat: 'border', colors: ['#2b2b2c'], v: 0.2 },
-  { id: 'flat-white', name: 'フラット ピュアホワイト', pat: 'flat', colors: ['#f3f3f1'], v: 0.06 },
-  { id: 'flat-gray', name: 'フラット ストーングレー', pat: 'flat', colors: ['#8e8f8d'], v: 0.1 },
-  { id: 'flat-charcoal', name: 'フラット チャコール', pat: 'flat', colors: ['#3e3f41'], v: 0.14 },
-  { id: 'flat-sand', name: 'フラット サンドベージュ', pat: 'flat', colors: ['#d7cbb5'], v: 0.08 },
-  { id: 'flat-sage', name: 'フラット セージグリーン', pat: 'flat', colors: ['#8f9b89'], v: 0.1 },
-  { id: 'wood-natural', name: '木目 ナチュラルオーク', pat: 'wood', colors: ['#b98c5e', '#a77a4e', '#c89b6b'], v: 0.22 },
-  { id: 'wood-walnut', name: '木目 ウォールナット', pat: 'wood', colors: ['#6b4a33', '#5a3d29', '#7b583e'], v: 0.25 },
-  { id: 'wood-gray', name: '木目 シルバーグレー', pat: 'wood', colors: ['#9b968d', '#8a857c', '#aba69d'], v: 0.2 },
-  { id: 'tile-brown', name: 'タイル ブラウンミックス', pat: 'tile', colors: ['#7a4e3a', '#8e5f46', '#6a4232'], joint: '#b8b1a5', v: 0.14 },
-  { id: 'tile-white', name: 'タイル ホワイトミックス', pat: 'tile', colors: ['#ecebe6', '#dfddd6', '#f4f3ef'], joint: '#c9c7c0', v: 0.08 },
-  { id: 'tile-black', name: 'タイル ブラックミックス', pat: 'tile', colors: ['#2f2f30', '#3b3b3c', '#242425'], joint: '#5b5b5b', v: 0.16 },
-  { id: 'vline-black', name: '縦ライン ガルバ調ブラック', pat: 'vline', colors: ['#28292b'], v: 0.15, metal: 0.35 },
-  { id: 'vline-silver', name: '縦ライン シルバー', pat: 'vline', colors: ['#a2a5a7'], v: 0.1, metal: 0.45 },
-  { id: 'vline-white', name: '縦ライン ホワイト', pat: 'vline', colors: ['#eeeeeb'], v: 0.06 },
-  { id: 'vline-navy', name: '縦ライン ネイビー', pat: 'vline', colors: ['#293548'], v: 0.15 },
+  // レジェール ピアレスストーン（21mm）
+  { id: 'AH5935U', code: 'AH5935U', series: 'レジェール', design: 'ピアレスストーン', color: 'QFマックス チタン ホワイト', pat: 'stone', colors: ['#f0f0ec', '#f5f5f2', '#e9e8e4'], v: 0.07, doc: true },
+  { id: 'AH5933U', code: 'AH5933U', series: 'レジェール', design: 'ピアレスストーン', color: 'QFチャコール チタン ブラック', pat: 'stone', colors: ['#3d3d3f', '#313133', '#4b4b4d'], v: 0.22, doc: true },
+  { id: 'AH5931U', code: 'AH5931U', series: 'レジェール', design: 'ピアレスストーン', color: 'QFシルク チタン ホワイト', pat: 'stone', colors: ['#eceae4', '#e4e1da', '#f2f0eb'], v: 0.08 },
+  { id: 'AH5932U', code: 'AH5932U', series: 'レジェール', design: 'ピアレスストーン', color: 'QFアッシュ チタン ベージュ', pat: 'stone', colors: ['#d6c8b2', '#c8b89e', '#e0d4c1'], v: 0.1 },
+  { id: 'AH5934U', code: 'AH5934U', series: 'レジェール', design: 'ピアレスストーン', color: 'QFシルク チタン グレー', pat: 'stone', colors: ['#9b9c9a', '#8a8b89', '#abaca9'], v: 0.12 },
+  // ネオロック・光セラ18 シュトラール18（横ストライプ）
+  { id: 'NH5797', code: 'NH5797', series: '光セラ18', design: 'シュトラール18', color: 'QFマックス チタン ホワイト', pat: 'border', colors: ['#f2f2ee'], v: 0.06 },
+  { id: 'NH5791', code: 'NH5791', series: '光セラ18', design: 'シュトラール18', color: 'QFシルク チタン ホワイト', pat: 'border', colors: ['#ecebe5'], v: 0.07 },
+  { id: 'NH5794', code: 'NH5794', series: '光セラ18', design: 'シュトラール18', color: 'QFシルク チタン グレー', pat: 'border', colors: ['#8f9091'], v: 0.12 },
+  { id: 'NH5798', code: 'NH5798', series: '光セラ18', design: 'シュトラール18', color: 'QFマット チタン ベージュ', pat: 'border', colors: ['#cdbfa8'], v: 0.1 },
+  { id: 'NH5796', code: 'NH5796', series: '光セラ18', design: 'シュトラール18', color: 'QFアトランティック チタン ブルー', pat: 'border', colors: ['#3e566d'], v: 0.16 },
+  // ネオロック・光セラ18 マレストーン18（横基調の石積み）
+  { id: 'NH5464', code: 'NH5464', series: '光セラ18', design: 'マレストーン18', color: 'QFテンポ チタン ブラウン', pat: 'stone', colors: ['#7a6553', '#6a5646', '#8a7562'], v: 0.16 },
+  { id: 'NH5465', code: 'NH5465', series: '光セラ18', design: 'マレストーン18', color: 'QFブリュレ チタン ブラック', pat: 'stone', colors: ['#3b3937', '#2f2d2c', '#4a4643'], v: 0.2 },
+  // ネオロック・光セラ18 シンプルストライプ18
+  { id: 'NH5884', code: 'NH5884', series: '光セラ18', design: 'シンプルストライプ18', color: 'QFアッシュ チタン グリーン', pat: 'vline', colors: ['#7d8a7a'], v: 0.12 },
+  { id: 'ss18-white', series: '光セラ18', design: 'シンプルストライプ18', color: 'QFシルク チタン ホワイト', pat: 'vline', colors: ['#eeede8'], v: 0.06 },
+  { id: 'ss18-gray', series: '光セラ18', design: 'シンプルストライプ18', color: 'QFダスキー チタン グレー', pat: 'vline', colors: ['#6f7174'], v: 0.14 },
+  { id: 'ss18-black', series: '光セラ18', design: 'シンプルストライプ18', color: 'QFチャコール チタン ブラック', pat: 'vline', colors: ['#333335'], v: 0.16 },
+  // ネオロック・光セラ18 メッシュライン（縦張り）
+  { id: 'mesh-white', series: '光セラ18', design: 'メッシュライン（縦張り）', color: 'QFレーテ チタン ホワイト', pat: 'vline', colors: ['#ecebe7'], v: 0.06 },
+  { id: 'mesh-black', series: '光セラ18', design: 'メッシュライン（縦張り）', color: 'QFレーテ チタン ブラック', pat: 'vline', colors: ['#2c2c2e'], v: 0.16 },
+  // ネオロック・光セラ18 セラトピア（木目）
+  { id: 'NH5912A', code: 'NH5912A', series: '光セラ18', design: 'セラトピア オッドシダー', color: 'QFオッド チタン ブラウン', pat: 'wood', colors: ['#8a6446', '#7a573b', '#9b7352'], v: 0.22 },
+  { id: 'NH5772A', code: 'NH5772A', series: '光セラ18', design: 'セラトピア エストレモウッド18', color: 'QFエストレモ チタン ブラウン', pat: 'wood', colors: ['#6e4f39', '#5d412e', '#7f5d44'], v: 0.24 },
+  // ネオロック・光セラ16 シックボーダー（横長タイル）
+  { id: 'cb16-white', series: '光セラ16', design: 'シックボーダー', color: 'QFマーチ チタン ホワイト', pat: 'tile', colors: ['#ecebe5', '#e2e0d8', '#f2f1ec'], joint: '#cfccc4', v: 0.08 },
+  { id: 'cb16-ocher', series: '光セラ16', design: 'シックボーダー', color: 'QFパルフェ チタン オーカー', pat: 'tile', colors: ['#c69a5a', '#b88b4d', '#d2a96c'], joint: '#d8d2c6', v: 0.12 },
+  { id: 'cb16-brown', series: '光セラ16', design: 'シックボーダー', color: 'QFテンダリー チタン ブラウン', pat: 'tile', colors: ['#6d4c3a', '#7d5a45', '#5e4032'], joint: '#b5ada1', v: 0.14 },
+  { id: 'cb16-black', series: '光セラ16', design: 'シックボーダー', color: 'QFテンダリー チタン ブラック', pat: 'tile', colors: ['#353536', '#2a2a2b', '#424243'], joint: '#6a6a6a', v: 0.16 },
+  // SOLIDO typeM_LAP（セメント素材のラップ張り）
+  { id: 'SMG72G', code: 'SMG72G', series: 'SOLIDO', design: 'typeM_LAP', color: '鉄黒', pat: 'lap', colors: ['#3b3b3b', '#333334', '#454544'], v: 0.3 },
+  { id: 'SMG85G', code: 'SMG85G', series: 'SOLIDO', design: 'typeM_LAP', color: 'セメント', pat: 'lap', colors: ['#aaa9a4', '#9d9c97', '#b6b5af'], v: 0.22 },
+  { id: 'SMG21G', code: 'SMG21G', series: 'SOLIDO', design: 'typeM_LAP', color: '錆茶', pat: 'lap', colors: ['#7b5c48', '#6e5040', '#8a6a55'], v: 0.26 },
+  { id: 'SMG65G', code: 'SMG65G', series: 'SOLIDO', design: 'typeM_LAP', color: '灰', pat: 'lap', colors: ['#8c8d8b', '#7f807e', '#999a97'], v: 0.24 },
+];
+for (const p of WALLS) p.name = `${p.series} ${p.design} ${p.color}`;
+// 軒天・玄関ドアの木目用テクスチャ（外壁の一覧には出さない）
+const TEX_ONLY = [
+  { id: 'wood-natural', name: '木目 ナチュラル', pat: 'wood', colors: ['#b98c5e', '#a77a4e', '#c89b6b'], v: 0.22, hidden: true },
+  { id: 'wood-walnut', name: '木目 ウォールナット', pat: 'wood', colors: ['#6b4a33', '#5a3d29', '#7b583e'], v: 0.25, hidden: true },
+];
+const SOURCES = [
+  ['ケイミュー ピアレスストーン 商品詳細（AH5931U〜AH5935U）', 'https://www.kmew.co.jp/shouhin/siding/shohin_shosai.jsp?ChiikiCD=1&SeriesCD=97&HinmeiCD=3070'],
+  ['ケイミュー オッドシダー 商品詳細（NH5912A）', 'https://www.kmew.co.jp/shouhin/siding/shohin_shosai.jsp?ChiikiCD=1&SeriesCD=76&HinmeiCD=3061'],
+  ['ケイミュー 光セラ16 シックボーダー', 'https://www.kmew.co.jp/design/gaiheki/detail/1/1/シックボーダー/NH3843A'],
+  ['ケイミュー SOLIDO typeM_LAP 製品概要', 'https://www.kmew.co.jp/shouhin/solido/typeM_LAP/spec/'],
+  ['Arch-LOG シュトラール18（NH5797）', 'https://www.arch-log.com/products/00/53a51544-8091-41a1-af98-9f252c91c55d/'],
+  ['Arch-LOG マレストーン18（NH5465）', 'https://www.arch-log.com/products/00/e6ed0d09-b488-410f-b9cb-5c460a0a037d/'],
+  ['TECTURE シンプルストライプ18', 'https://www.tecture.jp/products/62017'],
+  ['TECTURE エストレモウッド18（NH5772A）', 'https://www.tecture.jp/product_variations/35672'],
+  ['ケイミュー 新商品2024（メッシュライン）', 'https://www.kmew.co.jp/shouhin/siding/new2024/'],
 ];
 const OPTIONS = {
   sash: [
@@ -542,6 +619,22 @@ const GEN = {
       const i = y * TW + x, p = x % 64;
       let hv; if (p < 6) hv = 0.15; else if (p < 9) hv = 0.15 + (p - 6) / 3 * 0.75; else if (p < 61) hv = 0.9; else hv = 0.9 - (p - 60) / 4 * 0.75;
       h[i] = hv; s[i] = (n2[i] - 0.5) * 0.35 + (p < 6 ? -0.4 : 0);
+    }
+    return P;
+  },
+  lap() { // ラップ張り（羽目板）182mm
+    const rng = mulberry32(103), P = newPat(), { h, s, id } = P; P.k = 4;
+    const n1 = fbm(60, 30, 4, rng), n2 = fbm(3, 3, 2, rng), rows = 5, rh = TH / rows;
+    const ids = Array.from({ length: rows }, () => Array.from({ length: 2 }, rng));
+    for (let y = 0; y < TH; y++) {
+      const r = Math.floor(y / rh), t = (y - r * rh) / rh;
+      for (let x = 0; x < TW; x++) {
+        const i = y * TW + x, xs = (x + r * 311) % TW, seg = Math.floor(xs / 512);
+        id[i] = ids[r][seg];
+        if (xs % 512 < 2) { h[i] = 0.1; s[i] = -0.6; continue; }
+        h[i] = 0.25 + 0.75 * t + (n2[i] - 0.5) * 0.06;
+        s[i] = (n1[i] - 0.5) * 1.3 + (n2[i] - 0.5) * 0.5 + (t > 0.94 ? -0.9 : 0);
+      }
     }
     return P;
   },
@@ -839,7 +932,7 @@ const STORE_KEY = 'kmew-facade-sim-v1';
 const DEFAULT = {
   mode: 'single', edit: 'A', zone: 'f3', sync: true, roofType: 'mono', legend: true, filter: 'all',
   A: { f3: 'AH5935U', f2: 'AH5935U', f1: 'AH5935U', garage: 'AH5933U', sash: 'black', soffit: 'wood-natural', roof: 'black', door: 'wood-natural' },
-  B: { f3: 'AH5933U', f2: 'AH5935U', f1: 'AH5935U', garage: 'wood-walnut', sash: 'black', soffit: 'black', roof: 'black', door: 'black' },
+  B: { f3: 'AH5933U', f2: 'AH5935U', f1: 'AH5935U', garage: 'NH5912A', sash: 'black', soffit: 'black', roof: 'black', door: 'black' },
 };
 let userProducts = [];
 let S = structuredClone(DEFAULT);
@@ -851,11 +944,13 @@ try {
     if (saved.S) S = { ...S, ...saved.S, A: { ...DEFAULT.A, ...(saved.S.A || {}) }, B: { ...DEFAULT.B, ...(saved.S.B || {}) } };
   }
 } catch (e) { /* storage unavailable */ }
+for (const side of ['A', 'B']) for (const [z] of [['f1'], ['f2'], ['f3'], ['garage']]) if (!WALLS.concat(userProducts).some(p => p.id === S[side][z])) S[side][z] = DEFAULT[side][z];
+if (!['all', 'user', ...SERIES].includes(S.filter)) S.filter = 'all';
 if (window.matchMedia('(max-width: 700px)').matches) S.legend = false;
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify({ S, userProducts })); } catch (e) { /* ignore */ } }
 
 const allWalls = () => WALLS.concat(userProducts);
-const wallById = id => allWalls().find(p => p.id === id) || WALLS[0];
+const wallById = id => allWalls().find(p => p.id === id) || TEX_ONLY.find(p => p.id === id) || WALLS[0];
 function opt(cat, val) {
   if (typeof val === 'string' && val.startsWith('#')) return { id: val, name: 'カスタム ' + val.toUpperCase(), hex: val };
   return OPTIONS[cat].find(o => o.id === val) || OPTIONS[cat][0];
@@ -1060,16 +1155,16 @@ function renderZones() {
   }).join('');
 }
 function renderFilters() {
-  const keys = ['all', ...Object.keys(PATTERNS)]; if (userProducts.length) keys.push('user');
+  const keys = ['all', ...SERIES]; if (userProducts.length) keys.push('user');
   if (!keys.includes(S.filter)) S.filter = 'all';
-  $('#filters').innerHTML = keys.map(k => `<button type="button" data-filter="${k}" aria-pressed="${S.filter === k}">${k === 'all' ? 'すべて' : k === 'user' ? '登録品' : PATTERNS[k]}</button>`).join('');
+  $('#filters').innerHTML = keys.map(k => `<button type="button" data-filter="${k}" aria-pressed="${S.filter === k}">${k === 'all' ? 'すべて' : k === 'user' ? '登録品' : k}</button>`).join('');
 }
 function renderGrid() {
   const sel = cur()[S.zone];
-  const list = allWalls().filter(p => S.filter === 'all' || (S.filter === 'user' ? p.user : p.pat === S.filter));
+  const list = allWalls().filter(p => S.filter === 'all' || (S.filter === 'user' ? p.user : p.series === S.filter));
   $('#wallGrid').innerHTML = list.map(p => `<button type="button" class="sw-btn" data-prod="${esc(p.id)}" aria-pressed="${p.id === sel}" title="${esc(prodLabel(p))}">
       ${p.doc ? '<span class="badge">資料記載</span>' : p.user ? '<span class="badge">登録品</span>' : ''}
-      <img alt="" src="${thumb(p).url}">${p.code ? `<span class="cd">${esc(p.code)}</span>` : ''}<span class="nm">${esc(p.name)}</span></button>`).join('');
+      <img alt="" src="${thumb(p).url}">${p.code ? `<span class="cd">${esc(p.code)}</span>` : ''}<span class="nm">${esc(p.design ? p.design + ' ' + p.color : p.name)}</span></button>`).join('');
 }
 function chipStyle(o) { return o.wood ? `background-image:url(${thumb(wallById(o.wood)).url})` : `background:${o.hex}`; }
 function renderColors() {
@@ -1165,9 +1260,13 @@ function bindUI() {
     applyAll(); refreshUI(); save();
   });
   $('#snapBtn').addEventListener('click', snapshot);
+  $('#srcList').innerHTML = SOURCES.map(([t, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a></li>`).join('');
+  $('#helpBtn').addEventListener('click', () => { $('#help').hidden = false; $('#closeHelp').focus(); });
+  $('#closeHelp').addEventListener('click', () => { $('#help').hidden = true; $('#helpBtn').focus(); });
+  $('#help').addEventListener('click', e => { if (e.target.id === 'help') $('#help').hidden = true; });
   $('#closeModal').addEventListener('click', () => { $('#modal').hidden = true; });
   $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') $('#modal').hidden = true; });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#modal').hidden = true; });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('#modal').hidden = true; $('#help').hidden = true; } });
 }
 function syncFrom(vw) {
   const other = viewers[vw.side === 'A' ? 'B' : 'A'];
