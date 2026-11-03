@@ -515,7 +515,7 @@ const OPTIONS = {
 };
 const ZONES = [['f3', '3階'], ['balc', 'バルコニー内'], ['f2', '2階'], ['f1', '1階'], ['garage', 'ガレージ']];
 const ZONE_KEYS = ZONES.map(z => z[0]);
-const DOOR_SIZE = { u0: 1.0, u1: 1.85, y0: 0.17, y1: 2.27, depth: 0.04, w: 0.85, h: 2.1 };
+const DOOR_SIZE = { u0: 0.62, u1: 1.47, y0: 0.17, y1: 2.27, depth: 0.04, w: 0.85, h: 2.1 };
 // YKK AP 断熱玄関ドア ヴェナートD30 デザイン一覧（ご提供カタログ P.8〜9）。画像は同カタログの扉写真。
 const DOOR_TASTES = { N: 'ナチュラル', C: 'シック' };
 // ヴェナートD30 ナチュラル（P.42〜89）・シック（P.124〜153）の各デザインのカラーバリエーション。[色記号, 画像番号]
@@ -1038,6 +1038,11 @@ function buildHouse(roofType) {
   wallRegion(B, GS, 0, -G.z1 - 0.15, 0, G.top, [{ u0: 0.09, u1: 0.79, y0: 0, y1: 2.4 }], 'garage');
   const GF = { o: v(G.open0, 0, -0.15), U: v(-1, 0, 0), N: v(0, 0, -1) };
   wallRegion(B, GF, 0, G.open0 - G.x0, 0, G.top, [], 'garage');
+  // ガレージ正面と玄関（インナーポーチ）の間の袖壁：正面から1,820mm奥、北側の壁から1,365mm（平面図より）
+  const PZ = -1.82, PT = 0.12, PX1 = 1.365;
+  B('garage').box(v((G.x0 + PX1) / 2, G.top / 2, PZ - PT / 2), X, Y, Z, PX1 - G.x0, G.top, PT);
+  // インナーポーチの床タイル（袖壁の奥〜玄関、斜めの縁は平面図の形を簡略化）
+  B('tile').quad(v(G.x0, 0.012, PZ - PT), v(PX1 + 0.35, 0.012, PZ - PT), v(PX1 + 0.35, 0.012, G.z1), v(G.x0, 0.012, G.z1), Y, X, Z, O0);
   B('soffit').quad(v(G.x0, G.top, -0.15), v(G.x1, G.top, -0.15), v(G.x1, G.top, G.z1), v(G.x0, G.top, G.z1), v(0, -1, 0), X, Z, O0);
   B('gfloor').quad(v(G.x0, 0.004, 0), v(G.x1, 0.004, 0), v(G.x1, 0.004, G.z1), v(G.x0, 0.004, G.z1), Y, X, Z, O0);
   // 門柱（ガレージ左、道路側）：塗り壁の門柱（スリット2本）＋角柱3本
