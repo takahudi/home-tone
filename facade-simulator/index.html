@@ -99,7 +99,7 @@ button{cursor:pointer}
 .pane .viewer{flex:1}
 .legend{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:11.5px;line-height:1.35;
   display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:3px 14px}
-.legend .row{display:grid;grid-template-columns:52px 22px minmax(0,1fr);gap:6px;align-items:center;min-width:0}
+.legend .row{display:grid;grid-template-columns:70px 22px minmax(0,1fr);gap:6px;align-items:center;min-width:0}
 .legend .k{color:var(--muted);font-size:11px}
 .legend .sw{width:22px;height:16px;border-radius:3px;background-size:cover;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
 .legend .v{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -124,7 +124,7 @@ button{cursor:pointer}
 .sec h2{margin:0;font-size:14px;font-weight:700;letter-spacing:.06em}
 .sec-h .cur{font-size:12px;color:var(--muted);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .zones{display:grid;gap:6px}
-.zone{display:grid;grid-template-columns:60px 46px minmax(0,1fr);gap:10px;align-items:center;text-align:left;
+.zone{display:grid;grid-template-columns:84px 46px minmax(0,1fr);gap:10px;align-items:center;text-align:left;
   border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px}
 .zone:hover{border-color:var(--accent)}
 .zone[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
@@ -368,8 +368,8 @@ details.src a{color:var(--accent);word-break:break-all}
   <div class="modal-box sheet">
     <div class="sheet-h"><h2 id="helpTitle">使い方</h2><button type="button" class="btn small" id="closeHelp">閉じる</button></div>
     <ol class="steps">
-      <li><b>塗る場所を選ぶ</b>「外壁」の <em>3階・2階・1階・ガレージ</em> から1つタップ。パースの壁を直接タップしても選べます。</li>
-      <li><b>外壁材を選ぶ</b>下の一覧から材をタップ。検索欄に<em>品番や色名</em>（例：AH5935、シルク）を入れるか、<em>シリーズ</em>と<em>色の系統</em>で絞り込めます。全部の階を同じ材にするときは「この材を1〜3階すべてに」。縦張りできる柄は「縦張りで表示する」で向きを変えられます。</li>
+      <li><b>塗る場所を選ぶ</b>「外壁」の <em>3階・バルコニー内・2階・1階・ガレージ</em> から1つタップ。パースの壁を直接タップしても選べます。「バルコニー内」は3階インナーバルコニーの奥の壁と左右の壁です。</li>
+      <li><b>外壁材を選ぶ</b>下の一覧から材をタップ。検索欄に<em>品番や色名</em>（例：AH5935、シルク）を入れるか、<em>シリーズ</em>と<em>色の系統</em>で絞り込めます。全部の階を同じ材にするときは「この材を1〜3階すべてに」（バルコニー内も含みます）。縦張りできる柄は「縦張りで表示する」で向きを変えられます。</li>
       <li><b>窓枠・軒天・屋根・ドア</b>色の丸をタップ。虹色の丸を押すと好きな色を指定できます。屋根は片流れ／寄棟を切り替えられます。</li>
       <li><b>2案を比べる</b>「2画面で比較」を押すと A・B が並びます。「編集中」でどちらを変えるか選び、「A の内容を B にコピー」で叩き台を作ると早いです。</li>
       <li><b>見る角度を変える</b>指1本で回転、2本指でズーム・移動。視点ボタンで正面・側面・鳥瞰に切り替え。2画面は視点が連動します。</li>
@@ -468,7 +468,8 @@ const OPTIONS = {
     { id: 'silver', name: 'シルバー', hex: '#9a9da0' },
   ],
 };
-const ZONES = [['f3', '3階'], ['f2', '2階'], ['f1', '1階'], ['garage', 'ガレージ']];
+const ZONES = [['f3', '3階'], ['balc', 'バルコニー内'], ['f2', '2階'], ['f1', '1階'], ['garage', 'ガレージ']];
+const ZONE_KEYS = ZONES.map(z => z[0]);
 const CAT_LABEL = { sash: 'サッシ', soffit: '軒天', roof: '屋根', door: 'ドア' };
 
 /* =========================================================
@@ -835,8 +836,8 @@ function ring(B, F, u0, u1, y0, y1, fw, tc, fd, key = 'sash') {
   boxF(B, key, F, u0 + fw / 2, yc, tc, fw, h, fd); boxF(B, key, F, u1 - fw / 2, yc, tc, fw, h, fd);
   boxF(B, key, F, uc, y1 - fw / 2, tc, w - 2 * fw, fw, fd); boxF(B, key, F, uc, y0 + fw / 2, tc, w - 2 * fw, fw, fd);
 }
-function addWindow(B, F, o) {
-  reveals(B, F, o, { sill: true });
+function addWindow(B, F, o, fixed) {
+  reveals(B, F, o, { sill: true, fixed });
   const w = o.u1 - o.u0, fw = Math.min(0.045, w * 0.22);
   ring(B, F, o.u0, o.u1, o.y0, o.y1, fw, 0.08, 0.06);
   B('glass').quad(P(F, o.u0 + fw, o.y0 + fw, 0.1), P(F, o.u1 - fw, o.y0 + fw, 0.1), P(F, o.u1 - fw, o.y1 - fw, 0.1), P(F, o.u0 + fw, o.y1 - fw, 0.1), F.N, F.U, Y, F.o);
@@ -913,14 +914,14 @@ function buildHouse(roofType) {
       if (o.kind === 'win') addWindow(B, F, o);
       else if (o.kind === 'garage') reveals(B, F, o, { head: 'soffit' });
       else if (o.kind === 'pass') reveals(B, F, o);
-      else if (o.kind === 'recess') reveals(B, F, o, { head: 'soffit', sill: 'deck' });
+      else if (o.kind === 'recess') reveals(B, F, o, { head: 'soffit', sill: 'deck', fixed: 'balc' });
     }
   }
   // 3階インナーバルコニー
   const RD = 0.91, WR = { o: v(0, 0, -RD), U: X, N: Z };
   const rwin = { u0: 0.7, u1: 1.9, y0: 6.25, y1: 7.5, panes: 2 };
-  wallRegion(B, WR, 0.3, 2.0, 6.2, 7.75, [rwin]);
-  addWindow(B, WR, rwin);
+  wallRegion(B, WR, 0.3, 2.0, 6.2, 7.75, [rwin], 'balc');
+  addWindow(B, WR, rwin, 'balc');
   const FW = FACES.W;
   for (const u of [0.36, 1.15, 1.94]) boxF(B, 'sash', FW, u, 6.5, 0.05, 0.04, 0.6, 0.04);
   for (const y of [6.36, 6.5, 6.64]) boxF(B, 'sash', FW, 1.15, y, 0.04, 1.64, 0.03, 0.02);
@@ -955,8 +956,8 @@ function buildHouse(roofType) {
 const STORE_KEY = 'kmew-facade-sim-v1';
 const DEFAULT = {
   mode: 'single', edit: 'A', zone: 'f3', sync: true, roofType: 'mono', legend: true, filter: 'all', fam: 'all',
-  A: { vert: {}, f3: 'AH5935U', f2: 'AH5935U', f1: 'AH5935U', garage: 'AH5933U', sash: 'black', soffit: 'wood-natural', roof: 'black', door: 'wood-natural' },
-  B: { vert: {}, f3: 'AH5933U', f2: 'AH5935U', f1: 'AH5935U', garage: 'NH5912', sash: 'black', soffit: 'black', roof: 'black', door: 'black' },
+  A: { vert: {}, balc: 'AH5935U', f3: 'AH5935U', f2: 'AH5935U', f1: 'AH5935U', garage: 'AH5933U', sash: 'black', soffit: 'wood-natural', roof: 'black', door: 'wood-natural' },
+  B: { vert: {}, balc: 'NH5912', f3: 'AH5933U', f2: 'AH5935U', f1: 'AH5935U', garage: 'NH5912', sash: 'black', soffit: 'black', roof: 'black', door: 'black' },
 };
 let userProducts = [];
 let S = structuredClone(DEFAULT);
@@ -968,7 +969,7 @@ try {
     if (saved.S) S = { ...S, ...saved.S, A: { ...DEFAULT.A, ...(saved.S.A || {}) }, B: { ...DEFAULT.B, ...(saved.S.B || {}) } };
   }
 } catch (e) { /* storage unavailable */ }
-for (const side of ['A', 'B']) for (const [z] of [['f1'], ['f2'], ['f3'], ['garage']]) if (!WALLS.concat(userProducts).some(p => p.id === S[side][z])) S[side][z] = DEFAULT[side][z];
+for (const side of ['A', 'B']) for (const z of ZONE_KEYS) if (!WALLS.concat(userProducts).some(p => p.id === S[side][z])) S[side][z] = DEFAULT[side][z];
 if (!['all', 'user', ...SERIES].includes(S.filter)) S.filter = 'all';
 if (window.matchMedia('(max-width: 700px)').matches) S.legend = false;
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify({ S, userProducts })); } catch (e) { /* ignore */ } }
@@ -997,7 +998,7 @@ const VIEWS = {
 function makeMats() {
   const std = o => new THREE.MeshStandardMaterial(o);
   const m = {
-    f1: std({ roughness: 0.88 }), f2: std({ roughness: 0.88 }), f3: std({ roughness: 0.88 }), garage: std({ roughness: 0.88 }),
+    f1: std({ roughness: 0.88 }), f2: std({ roughness: 0.88 }), f3: std({ roughness: 0.88 }), garage: std({ roughness: 0.88 }), balc: std({ roughness: 0.88 }),
     found: std({ color: '#bebdb7', roughness: 0.95 }),
     soffit: std({ roughness: 0.8 }), roof: std({ roughness: 0.75 }), fascia: std({ roughness: 0.55, metalness: 0.2 }),
     deck: std({ color: '#8f9190', roughness: 0.9 }), gfloor: std({ color: '#c6c5bf', roughness: 0.95 }),
@@ -1007,7 +1008,7 @@ function makeMats() {
     handle: std({ color: '#1c1c1e', roughness: 0.3, metalness: 0.8 }),
   };
   m.trim2 = m.sash; m.trim3 = m.sash;
-  for (const k of ['f1', 'f2', 'f3', 'garage', 'door']) m[k].normalScale = new THREE.Vector2(1, 1);
+  for (const k of [...ZONE_KEYS, 'door']) m[k].normalScale = new THREE.Vector2(1, 1);
   return m;
 }
 function buildSite(scene) {
@@ -1108,7 +1109,7 @@ class Viewer {
   }
   apply(st) {
     const M = this.mats;
-    for (const z of ['f1', 'f2', 'f3', 'garage']) {
+    for (const z of ZONE_KEYS) {
       const p = wallById(st[z]), mat = M[z], vert = !!(st.vert && st.vert[z]) && /縦/.test(p.orient || '');
       const want = p.id + (vert ? '|v' : ''); mat.userData.want = want;
       mat.metalness = p.metal || 0; mat.roughness = p.metal ? 0.5 : 0.85;
@@ -1147,7 +1148,7 @@ class Viewer {
     if (S.mode === 'compare' && S.edit !== this.side) { S.edit = this.side; refreshUI(); }
     if (!hit) return;
     const k = hit.object.userData.key;
-    const map = { f1: 'f1', f2: 'f2', f3: 'f3', garage: 'garage', sash: 'sash', trim2: 'sash', trim3: 'sash', glass: 'sash', soffit: 'soffit', roof: 'roof', fascia: 'roof', door: 'door', handle: 'door' };
+    const map = { f1: 'f1', f2: 'f2', f3: 'f3', garage: 'garage', balc: 'balc', sash: 'sash', trim2: 'sash', trim3: 'sash', glass: 'sash', soffit: 'soffit', roof: 'roof', fascia: 'roof', door: 'door', handle: 'door' };
     const target = map[k]; if (!target) return;
     if (ZONES.some(z => z[0] === target)) { S.zone = target; refreshUI(); focusSection(document.getElementById('secWall')); }
     else focusSection(document.querySelector(`.colors[data-cat="${target}"]`).closest('.sec'));
@@ -1287,8 +1288,8 @@ function bindUI() {
     setState(st => { st.vert = { ...(st.vert || {}), [S.zone]: e.target.checked }; });
   });
   $('#wallGrid').addEventListener('click', e => { const b = e.target.closest('[data-prod]'); if (b) setState(st => { st[S.zone] = b.dataset.prod; }); });
-  $('#applyFloors').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = p; }));
-  $('#applyAll').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = st.garage = p; }));
+  $('#applyFloors').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = st.balc = p; }));
+  $('#applyAll').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = st.balc = st.garage = p; }));
   $('#panel').addEventListener('click', e => { const c = e.target.closest('button.chip'); if (c) setState(st => { st[c.dataset.cat] = c.dataset.val; }); });
   $('#panel').addEventListener('input', e => {
     const t = e.target; if (t.type !== 'color' || !t.dataset.cat) return;
@@ -1342,7 +1343,7 @@ async function snapshot() {
   });
   const sc = Math.min(window.devicePixelRatio || 1, 2);
   const gap = Math.round(14 * sc), head = Math.round(54 * sc), lineH = Math.round(22 * sc);
-  const legH = lineH * 7 + gap * 2;
+  const legH = lineH * (ZONES.length + 3) + gap * 2;
   const iw = imgs[0].width, ih = imgs[0].height;
   const c = mkCanvas(iw * imgs.length + gap * (imgs.length + 1), head + ih + legH + gap), g = c.getContext('2d');
   g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
