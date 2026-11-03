@@ -347,6 +347,12 @@ details.src a{color:var(--accent);word-break:break-all}
         <div class="sec-h"><h2>玄関ドア</h2><span class="cur" id="cur-door"></span></div>
         <div class="colors" data-cat="door"></div>
       </section>
+      <section class="sec">
+        <div class="sec-h"><h2>門柱</h2><span class="cur" id="cur-gate"></span></div>
+        <label class="check"><input type="checkbox" id="gateChk" checked> 門柱を表示する</label>
+        <div class="colors" data-cat="gate"></div>
+        <p class="note">ガレージ左の道路側に置いています（幅45cm・高さ1.6m）。表札・インターホン・ポスト・門灯付きのイメージです。</p>
+      </section>
     </aside>
   </main>
 </div>
@@ -370,7 +376,7 @@ details.src a{color:var(--accent);word-break:break-all}
     <ol class="steps">
       <li><b>塗る場所を選ぶ</b>「外壁」の <em>3階・バルコニー内・2階・1階・ガレージ</em> から1つタップ。パースの壁を直接タップしても選べます。「バルコニー内」は3階インナーバルコニーの奥の壁と左右の壁です。</li>
       <li><b>外壁材を選ぶ</b>下の一覧から材をタップ。検索欄に<em>品番や色名</em>（例：AH5935、シルク）を入れるか、<em>シリーズ</em>と<em>色の系統</em>で絞り込めます。全部の階を同じ材にするときは「この材を1〜3階すべてに」（バルコニー内も含みます）。縦張りできる柄は「縦張りで表示する」で向きを変えられます。</li>
-      <li><b>窓枠・軒天・屋根・ドア</b>色の丸をタップ。虹色の丸を押すと好きな色を指定できます。屋根は片流れ／寄棟を切り替えられます。</li>
+      <li><b>窓枠・軒天・屋根・ドア・門柱</b>色の丸をタップ。門柱は「門柱を表示する」で出し入れできます。虹色の丸を押すと好きな色を指定できます。屋根は片流れ／寄棟を切り替えられます。</li>
       <li><b>2案を比べる</b>「2画面で比較」を押すと A・B が並びます。「編集中」でどちらを変えるか選び、「A の内容を B にコピー」で叩き台を作ると早いです。</li>
       <li><b>見る角度を変える</b>指1本で回転、2本指でズーム・移動。視点ボタンで正面・側面・鳥瞰に切り替え。2画面は視点が連動します。</li>
       <li><b>画像にして残す</b>「画像にする」で材料の一覧付き画像を作成。スマホは画像を長押しして保存します。</li>
@@ -460,6 +466,13 @@ const OPTIONS = {
     { id: 'green', name: 'グリーン', hex: '#3e4b40' },
     { id: 'silver', name: 'シルバー', hex: '#8e9295' },
   ],
+  gate: [
+    { id: 'black', name: 'ブラック', hex: '#232426' },
+    { id: 'darkgray', name: 'ダークグレー', hex: '#4a4c4f' },
+    { id: 'white', name: 'ホワイト', hex: '#eeeeeb' },
+    { id: 'wood-natural', name: '木目 ナチュラル', wood: 'wood-natural' },
+    { id: 'wood-walnut', name: '木目 ウォールナット', wood: 'wood-walnut' },
+  ],
   door: [
     { id: 'wood-natural', name: '木目 ナチュラル', wood: 'wood-natural' },
     { id: 'wood-walnut', name: '木目 ウォールナット', wood: 'wood-walnut' },
@@ -470,7 +483,7 @@ const OPTIONS = {
 };
 const ZONES = [['f3', '3階'], ['balc', 'バルコニー内'], ['f2', '2階'], ['f1', '1階'], ['garage', 'ガレージ']];
 const ZONE_KEYS = ZONES.map(z => z[0]);
-const CAT_LABEL = { sash: 'サッシ', soffit: '軒天', roof: '屋根', door: 'ドア' };
+const CAT_LABEL = { sash: 'サッシ', soffit: '軒天', roof: '屋根', door: 'ドア', gate: '門柱' };
 
 /* =========================================================
    テクスチャ生成（1枚 = 1.82m × 0.91m）
@@ -944,6 +957,13 @@ function buildHouse(roofType) {
   wallRegion(B, GF, 0, G.open0 - G.x0, 0, G.top, [], 'garage');
   B('soffit').quad(v(G.x0, G.top, -0.15), v(G.x1, G.top, -0.15), v(G.x1, G.top, G.z1), v(G.x0, G.top, G.z1), v(0, -1, 0), X, Z, O0);
   B('gfloor').quad(v(G.x0, 0.004, 0), v(G.x1, 0.004, 0), v(G.x1, 0.004, G.z1), v(G.x0, 0.004, G.z1), Y, X, Z, O0);
+  // 門柱（ガレージ左、道路側）
+  const GX = 0.45, GZ = 1.6, GW = 0.45, GH = 1.6, GD = 0.2, fz = GZ + GD / 2;
+  B('gate').box(v(GX, GH / 2, GZ), X, Y, Z, GW, GH, GD);
+  B('gateMetal').box(v(GX, 1.36, fz + 0.005), X, Y, Z, 0.28, 0.08, 0.012);   // 表札
+  B('gateMetal').box(v(GX, 1.12, fz + 0.015), X, Y, Z, 0.1, 0.15, 0.03);     // インターホン
+  B('gateMetal').box(v(GX, 0.92, fz + 0.008), X, Y, Z, 0.3, 0.05, 0.016);    // ポスト投函口
+  B('gateLight').box(v(GX, GH - 0.06, fz + 0.02), X, Y, Z, 0.32, 0.03, 0.04); // 門灯
   trims(B);
   if (roofType === 'hip') roofHip(B); else roofMono(B);
   const out = {}; for (const k in Bs) out[k] = Bs[k].geo();
@@ -956,8 +976,8 @@ function buildHouse(roofType) {
 const STORE_KEY = 'kmew-facade-sim-v1';
 const DEFAULT = {
   mode: 'single', edit: 'A', zone: 'f3', sync: true, roofType: 'mono', legend: true, filter: 'all', fam: 'all',
-  A: { vert: {}, balc: 'AH5935U', f3: 'AH5935U', f2: 'AH5935U', f1: 'AH5935U', garage: 'AH5933U', sash: 'black', soffit: 'wood-natural', roof: 'black', door: 'wood-natural' },
-  B: { vert: {}, balc: 'NH5912', f3: 'AH5933U', f2: 'AH5935U', f1: 'AH5935U', garage: 'NH5912', sash: 'black', soffit: 'black', roof: 'black', door: 'black' },
+  A: { vert: {}, balc: 'AH5935U', f3: 'AH5935U', f2: 'AH5935U', f1: 'AH5935U', garage: 'AH5933U', sash: 'black', soffit: 'wood-natural', roof: 'black', door: 'wood-natural', gate: 'black', gateOn: true },
+  B: { vert: {}, balc: 'NH5912', f3: 'AH5933U', f2: 'AH5935U', f1: 'AH5935U', garage: 'NH5912', sash: 'black', soffit: 'black', roof: 'black', door: 'black', gate: 'black', gateOn: true },
 };
 let userProducts = [];
 let S = structuredClone(DEFAULT);
@@ -1006,6 +1026,9 @@ function makeMats() {
     glass: std({ color: '#71808c', roughness: 0.03, metalness: 0.9 }),
     door: std({ roughness: 0.55 }), tile: std({ color: '#76736e', roughness: 0.8 }),
     handle: std({ color: '#1c1c1e', roughness: 0.3, metalness: 0.8 }),
+    gate: std({ roughness: 0.55, metalness: 0.15 }),
+    gateMetal: std({ color: '#b9bcbe', roughness: 0.3, metalness: 0.85 }),
+    gateLight: std({ color: '#fff6e0', emissive: '#ffe2a8', emissiveIntensity: 1.6 }),
   };
   m.trim2 = m.sash; m.trim3 = m.sash;
   for (const k of [...ZONE_KEYS, 'door']) m[k].normalScale = new THREE.Vector2(1, 1);
@@ -1138,6 +1161,11 @@ class Viewer {
     if (dr.wood) { M.door.map = colorTex(wallById(dr.wood)); M.door.color.set('#ffffff'); }
     else { M.door.map = null; M.door.color.set(dr.hex); }
     M.door.normalMap = normTex('wood'); M.door.needsUpdate = true;
+    const gt = opt('gate', st.gate);
+    if (gt.wood) { M.gate.map = colorTex(wallById(gt.wood)); M.gate.normalMap = normTex('wood'); M.gate.color.set('#ffffff'); }
+    else { M.gate.map = null; M.gate.normalMap = null; M.gate.color.set(gt.hex); }
+    M.gate.needsUpdate = true;
+    for (const m of this.house.children) if (/^gate/.test(m.userData.key)) m.visible = st.gateOn !== false;
     this.dirty = true;
   }
   pick(e) {
@@ -1148,7 +1176,7 @@ class Viewer {
     if (S.mode === 'compare' && S.edit !== this.side) { S.edit = this.side; refreshUI(); }
     if (!hit) return;
     const k = hit.object.userData.key;
-    const map = { f1: 'f1', f2: 'f2', f3: 'f3', garage: 'garage', balc: 'balc', sash: 'sash', trim2: 'sash', trim3: 'sash', glass: 'sash', soffit: 'soffit', roof: 'roof', fascia: 'roof', door: 'door', handle: 'door' };
+    const map = { f1: 'f1', f2: 'f2', f3: 'f3', garage: 'garage', balc: 'balc', sash: 'sash', trim2: 'sash', trim3: 'sash', glass: 'sash', soffit: 'soffit', roof: 'roof', fascia: 'roof', door: 'door', handle: 'door', gate: 'gate', gateMetal: 'gate', gateLight: 'gate' };
     const target = map[k]; if (!target) return;
     if (ZONES.some(z => z[0] === target)) { S.zone = target; refreshUI(); focusSection(document.getElementById('secWall')); }
     else focusSection(document.querySelector(`.colors[data-cat="${target}"]`).closest('.sec'));
@@ -1232,7 +1260,7 @@ function renderColors() {
 function renderLegend(side) {
   const st = S[side], el = $('#leg' + side); if (!el) return;
   const rows = ZONES.map(([k, l]) => { const p = wallById(st[k]); return `<div class="row"><span class="k">${l}${st.vert && st.vert[k] && /縦/.test(p.orient || '') ? '（縦）' : ''}</span><span class="sw" style="${swatchStyle(p, 22)}"></span><span class="v">${p.code ? `<span class="code">${esc(p.code)}</span>` : ''}${esc(p.name)}</span></div>`; });
-  for (const cat of ['sash', 'soffit', 'roof']) { const o = opt(cat, st[cat]); rows.push(`<div class="row"><span class="k">${CAT_LABEL[cat]}</span><span class="sw" style="${chipStyle(o)}"></span><span class="v">${esc(o.name)}</span></div>`); }
+  for (const cat of ['sash', 'soffit', 'roof', ...(st.gateOn !== false ? ['gate'] : [])]) { const o = opt(cat, st[cat]); rows.push(`<div class="row"><span class="k">${CAT_LABEL[cat]}</span><span class="sw" style="${chipStyle(o)}"></span><span class="v">${esc(o.name)}</span></div>`); }
   el.innerHTML = rows.join('');
 }
 function renderUserList() {
@@ -1247,6 +1275,7 @@ function refreshUI(full = true) {
   $('#syncWrap').hidden = !cmp;
   $('#sync').checked = S.sync;
   $('#legendChk').checked = S.legend;
+  $('#gateChk').checked = cur().gateOn !== false;
   $('#stage').classList.toggle('compare', cmp);
   $('#stage').classList.toggle('no-legend', !S.legend);
   $('#pB').hidden = !cmp;
@@ -1320,6 +1349,7 @@ function bindUI() {
     applyAll(); refreshUI(); save();
   });
   $('#snapBtn').addEventListener('click', snapshot);
+  $('#gateChk').addEventListener('change', e => setState(st => { st.gateOn = e.target.checked; }));
   $('#helpBtn').addEventListener('click', () => { $('#help').hidden = false; $('#closeHelp').focus(); });
   $('#closeHelp').addEventListener('click', () => { $('#help').hidden = true; $('#helpBtn').focus(); });
   $('#help').addEventListener('click', e => { if (e.target.id === 'help') $('#help').hidden = true; });
@@ -1343,7 +1373,7 @@ async function snapshot() {
   });
   const sc = Math.min(window.devicePixelRatio || 1, 2);
   const gap = Math.round(14 * sc), head = Math.round(54 * sc), lineH = Math.round(22 * sc);
-  const legH = lineH * (ZONES.length + 3) + gap * 2;
+  const legH = lineH * (ZONES.length + 4) + gap * 2;
   const iw = imgs[0].width, ih = imgs[0].height;
   const c = mkCanvas(iw * imgs.length + gap * (imgs.length + 1), head + ih + legH + gap), g = c.getContext('2d');
   g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
@@ -1359,7 +1389,7 @@ async function snapshot() {
     }
     let y = head + ih + gap + lineH / 2;
     const rows = ZONES.map(([k, l]) => { const p = wallById(st[k]); return [l, prodLabel(p) + (p.price ? `（${p.price.toLocaleString()}円/枚）` : ''), p, null]; });
-    for (const cat of ['sash', 'soffit', 'roof']) { const o = opt(cat, st[cat]); rows.push([CAT_LABEL[cat], o.name, o.wood ? wallById(o.wood) : null, o.hex]); }
+    for (const cat of ['sash', 'soffit', 'roof', ...(st.gateOn !== false ? ['gate'] : [])]) { const o = opt(cat, st[cat]); rows.push([CAT_LABEL[cat], o.name, o.wood ? wallById(o.wood) : null, o.hex]); }
     for (const [l, txt, tp, hex] of rows) {
       g.fillStyle = '#5f696d'; g.font = `500 ${Math.round(12 * sc)}px "Zen Kaku Gothic New", sans-serif`; g.fillText(l, x, y);
       const sx = x + 64 * sc, sw = 26 * sc, sh = 16 * sc;
