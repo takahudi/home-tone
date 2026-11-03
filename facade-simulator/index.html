@@ -237,7 +237,7 @@ details.src a{color:var(--accent);word-break:break-all}
   <header class="bar">
     <div class="brand">
       <h1>高藤邸 外壁カラーシミュレーター</h1>
-      <p>プランNo.2・木造3階建・インナーガレージ／<span class="num">間口 4,345 × 奥行 10,010 mm</span></p>
+      <p>プランNo.5（2026.06.09）・木造3階建・インナーガレージ／<span class="num">間口 4,400 × 奥行 10,010 mm</span></p>
     </div>
     <div class="bar-actions">
       <div class="seg" id="modeSeg">
@@ -389,12 +389,12 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* =========================================================
-   建物寸法（m）— プランNo.2 平面図・立面図より
+   建物寸法（m）— プランNo.5（2026.06.09）平面図・立面図より
    x: 北(0) → 南(W) / z: 西面(0) → 東(-D) / y: GL
    ========================================================= */
-const W = 4.345, D = 10.01;
+const W = 4.4, D = 10.01;
 const Y_FOUND = 0.4, Y_2F = 3.05, Y_3F = 5.95, Y_TOP = 8.3;
-const GAR = { x0: 0.15, x1: 4.17, z1: -3.64, top: 2.46, open0: 1.5 };
+const GAR = { x0: 0.15, x1: W - 0.175, z1: -3.64, top: 2.46, open0: 1.5 };
 const v = (x, y, z) => new THREE.Vector3(x, y, z);
 const X = v(1, 0, 0), Y = v(0, 1, 0), Z = v(0, 0, 1), O0 = v(0, 0, 0);
 
@@ -406,14 +406,14 @@ const FACES = {
 };
 // 開口（u: 外から見て左端からの距離, y: GLからの高さ）
 const OPENINGS = [
-  { f: 'W', u0: 1.5,  u1: 4.17, y0: 0,    y1: 2.46, kind: 'garage', depth: 0.15 },
+  { f: 'W', u0: 1.5,  u1: GAR.x1, y0: 0,    y1: 2.46, kind: 'garage', depth: 0.15 },
   { f: 'W', u0: 1.42, u1: 3.07, y0: 3.9,  y1: 5.1,  kind: 'win', panes: 2, shutter: true },
   { f: 'W', u0: 0.3,  u1: 2.0,  y0: 6.2,  y1: 7.75, kind: 'recess', depth: 0.91 },
   { f: 'S', u0: 2.85, u1: 3.55, y0: 0,    y1: 2.4,  kind: 'pass', depth: W - GAR.x1 },
   { f: 'S', u0: 2.98, u1: 3.5,  y0: 4.3,  y1: 5.0,  kind: 'win', panes: 1 },
   { f: 'S', u0: 3.84, u1: 4.35, y0: 6.8,  y1: 7.55, kind: 'win', panes: 1 },
-  { f: 'E', u0: 1.39, u1: 2.57, y0: 6.8,  y1: 7.55, kind: 'win', panes: 3 },
-  { f: 'E', u0: 1.77, u1: 1.97, y0: 1.44, y1: 2.39, kind: 'win', panes: 1 },
+  { f: 'E', u0: 1.44, u1: 2.62, y0: 6.8,  y1: 7.55, kind: 'win', panes: 3 },
+  { f: 'E', u0: 1.83, u1: 2.0,  y0: 1.44, y1: 2.39, kind: 'win', panes: 1 },
   { f: 'N', u0: 3.32, u1: 3.53, y0: 6.56, y1: 7.48, kind: 'win', panes: 1 },
   { f: 'N', u0: 3.76, u1: 3.97, y0: 6.56, y1: 7.48, kind: 'win', panes: 1 },
   { f: 'N', u0: 6.91, u1: 7.12, y0: 3.12, y1: 4.92, kind: 'win', panes: 1 },
@@ -1029,7 +1029,7 @@ function buildSite(scene) {
     m.castShadow = true;
   };
   nb(-11, -4.6, -0.5, -10.5, 6.6, '#d8d3ca');
-  nb(-2, 8, -14.5, -22, 6.2, '#cfd3d4');
+  nb(7.5, 16, -14.5, -22, 6.2, '#cfd3d4');
   const shrubMat = new THREE.MeshStandardMaterial({ color: '#4d7a3b', roughness: 0.95, flatShading: true });
   const rng = mulberry32(3);
   const spots = [[-0.45, 1.5], [-0.45, 0.9], [-0.5, 0.25], [W + 0.45, 1.6], [W + 0.45, 1.0], [W + 0.4, -1.0], [W + 0.4, -1.7], [W + 0.4, -5.2], [W + 0.4, -6.0]];
@@ -1348,7 +1348,7 @@ async function snapshot() {
   const c = mkCanvas(iw * imgs.length + gap * (imgs.length + 1), head + ih + legH + gap), g = c.getContext('2d');
   g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
   g.fillStyle = '#1b2023'; g.font = `700 ${Math.round(17 * sc)}px "Zen Kaku Gothic New", sans-serif`; g.textBaseline = 'middle';
-  g.fillText('高藤邸 外壁カラーシミュレーション（プランNo.2）', gap, head / 2);
+  g.fillText('高藤邸 外壁カラーシミュレーション（プランNo.5）', gap, head / 2);
   for (let i = 0; i < imgs.length; i++) {
     const im = imgs[i];
     const x = gap + i * (iw + gap), side = sides[i], st = S[side];
