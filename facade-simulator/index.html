@@ -994,7 +994,12 @@ function roofHip(B) {
   B('fascia').quad(lo(xa, zb), lo(xb, zb), hi(xb, zb), hi(xa, zb), v(0, 0, -1), X, Y, O0);
   B('fascia').quad(lo(xa, zf), lo(xa, zb), hi(xa, zb), hi(xa, zf), v(-1, 0, 0), Z, Y, O0);
   B('fascia').quad(lo(xb, zf), lo(xb, zb), hi(xb, zb), hi(xb, zf), X, Z, Y, O0);
-  B('fascia').box(v(W / 2, yr + 0.03, (r1.z + r2.z) / 2), X, Y, Z, 0.18, 0.08, r1.z - r2.z + 0.1);
+  // 棟包み：屋根面に沿った低い山形。棟の端（r1・r2）で止め、上に飛び出さないようにする
+  const cw = 0.09, lift = 0.012, top = yr + lift + 0.012, edge = yr - pitch * cw + lift;
+  const zA = r1.z, zB = r2.z, xm = W / 2;
+  const nL = v(-pitch, 1, 0).normalize(), nR = v(pitch, 1, 0).normalize();
+  B('fascia').quad(v(xm - cw, edge, zA), v(xm, top, zA), v(xm, top, zB), v(xm - cw, edge, zB), nL, Z, Y, O0);
+  B('fascia').quad(v(xm, top, zA), v(xm + cw, edge, zA), v(xm + cw, edge, zB), v(xm, top, zB), nR, Z, Y, O0);
 }
 function buildHouse(roofType) {
   const Bs = {}; const B = k => Bs[k] || (Bs[k] = new GB());
