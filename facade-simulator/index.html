@@ -340,7 +340,7 @@ details.src a{color:var(--accent);word-break:break-all}
       <section class="sec">
         <div class="sec-h"><h2>軒天</h2><span class="cur" id="cur-soffit"></span></div>
         <div class="colors" data-cat="soffit"></div>
-        <p class="note">屋根の軒裏、3階インナーバルコニーとインナーガレージの天井に反映されます。</p>
+        <p class="note">屋根の軒裏、3階インナーバルコニーとインナーガレージの天井に反映されます。木目調はニチハ 軒天14（14mm厚品）無孔板の YL251 ライト／YL252 ミディアム／YL253 ダークです。</p>
       </section>
       <section class="sec">
         <div class="sec-h"><h2>屋根・破風</h2><span class="cur" id="cur-roof"></span></div>
@@ -469,8 +469,10 @@ const OPTIONS = {
     { id: 'lightgray', name: 'ライトグレー', hex: '#c8c9c6' },
     { id: 'darkgray', name: 'ダークグレー', hex: '#5a5c5e' },
     { id: 'black', name: 'ブラック', hex: '#27282a' },
-    { id: 'wood-natural', name: '木目 ナチュラル', wood: 'wood-natural' },
-    { id: 'wood-walnut', name: '木目 ウォールナット', wood: 'wood-walnut' },
+    // ニチハ 軒天14（14mm厚品）無孔板 木目調（ご提供資料より）
+    { id: 'YL251', name: 'ニチハ 軒天14 木目調 YL251 ライト', img: 'nichiha/YL251.jpg', hex: '#ba7e60' },
+    { id: 'YL252', name: 'ニチハ 軒天14 木目調 YL252 ミディアム', img: 'nichiha/YL252.jpg', hex: '#956353' },
+    { id: 'YL253', name: 'ニチハ 軒天14 木目調 YL253 ダーク', img: 'nichiha/YL253.jpg', hex: '#4e3b3c' },
   ],
   roof: [
     { id: 'black', name: 'グラッサ・ブラック（CC562K）', hex: '#2b2d2f' },
@@ -515,6 +517,7 @@ const DOORS = ('N05T N06T N07T N11T N17T N01N N02N N03N N04N N05N N06N N07N N08N
 const doorById = id => DOORS.find(d => d.id === id);
 const doorLabel = d => `YKK AP ヴェナートD30 ${d.id}（${DOOR_TASTES[d.taste]}${d.vent ? '・通風' : ''}）`;
 const doorSprite = (d, w) => `background-image:url(ykk/doors.jpg);background-size:${w * 12}px auto;background-position:-${(d.i % 12) * w}px -${Math.floor(d.i / 12) * w * 216 / 89}px`;
+const SOFFIT_ALIAS = { 'wood-natural': 'YL251', 'wood-walnut': 'YL253' }; // 旧・汎用木目からの置き換え
 const CAT_LABEL = { sash: 'サッシ', soffit: '軒天', roof: '屋根', door: 'ドア', gate: '門柱', gatePost: '角柱' };
 
 /* =========================================================
@@ -769,6 +772,14 @@ function catalogTex(p, vert) {
     return { map, normal };
   }));
 }
+const IMG_TEX = {};
+// 実寸（w×h m）で繰り返す画像テクスチャ
+function imgTex(src, w, h) {
+  return IMG_TEX[src] || (IMG_TEX[src] = new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; }).then(im => {
+    const t = new THREE.Texture(im); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8;
+    t.repeat.set(1 / w, 1 / h); t.needsUpdate = true; return t;
+  }));
+}
 let DOOR_SHEET = null;
 const doorSheet = () => DOOR_SHEET || (DOOR_SHEET = new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = 'ykk/doors.jpg'; }));
 const DOOR_TEX = {};
@@ -791,6 +802,7 @@ function swatchStyle(p, size) {
   return `background-image:url(${ASSET_DIR}thumbs.jpg);background-size:${size * 16}px auto;background-position:-${(i % 16) * size}px -${Math.floor(i / 16) * size}px`;
 }
 async function drawSwatch(g, p, dx, dy, dw, dh) {
+  if (p.img) { try { const im = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = p.img; }); g.drawImage(im, 0, 0, im.width * 0.5, im.height * 0.5, dx, dy, dw, dh); } catch (e) { g.fillStyle = '#9a6a52'; g.fillRect(dx, dy, dw, dh); } return; }
   if (p.door) { try { const im = await doorSheet(), d = p.door; g.drawImage(im, (d.i % 12) * 89, Math.floor(d.i / 12) * 216 + 70, 89, 55, dx, dy, dw, dh); } catch (e) { g.fillStyle = '#8a7a68'; g.fillRect(dx, dy, dw, dh); } return; }
   const i = thumbIndex(p);
   if (i < 0) { g.drawImage(thumb(p).canvas, 0, 0, 128, 80, dx, dy, dw, dh); return; }
@@ -1037,7 +1049,7 @@ function buildHouse(roofType) {
 const STORE_KEY = 'kmew-facade-sim-v1';
 const DEFAULT = {
   mode: 'single', edit: 'A', zone: 'f3', sync: true, roofType: 'mono', legend: true, filter: 'all', fam: 'all', doorTaste: 'all',
-  A: { vert: {}, balc: 'AH5935U', f3: 'AH5935U', f2: 'AH5935U', f1: 'AH5935U', garage: 'AH5933U', sash: 'black', soffit: 'wood-natural', roof: 'black', door: 'wood-natural', doorDesign: 'N07T', gate: 'charcoal', gatePost: 'wood-walnut', gateOn: true },
+  A: { vert: {}, balc: 'AH5935U', f3: 'AH5935U', f2: 'AH5935U', f1: 'AH5935U', garage: 'AH5933U', sash: 'black', soffit: 'YL251', roof: 'black', door: 'wood-natural', doorDesign: 'N07T', gate: 'charcoal', gatePost: 'wood-walnut', gateOn: true },
   B: { vert: {}, balc: 'NH5912', f3: 'AH5933U', f2: 'AH5935U', f1: 'AH5935U', garage: 'NH5912', sash: 'black', soffit: 'black', roof: 'black', door: 'black', doorDesign: 'F12N', gate: 'charcoal', gatePost: 'wood-walnut', gateOn: true },
 };
 let userProducts = [];
@@ -1048,7 +1060,8 @@ try {
     const saved = JSON.parse(raw);
     if (Array.isArray(saved.userProducts)) userProducts = saved.userProducts.filter(p => p && p.id && PATTERNS[p.pat] && Array.isArray(p.colors));
     if (saved.S) S = { ...S, ...saved.S, A: { ...DEFAULT.A, ...(saved.S.A || {}) }, B: { ...DEFAULT.B, ...(saved.S.B || {}) } };
-    if (saved.S) for (const side of ['A', 'B']) if (saved.S[side] && !('gatePost' in saved.S[side])) S[side].gate = DEFAULT[side].gate; // 門柱の形状変更に合わせて色を更新
+    if (saved.S) for (const side of ['A', 'B']) if (saved.S[side] && !('gatePost' in saved.S[side])) S[side].gate = DEFAULT[side].gate;
+    for (const side of ['A', 'B']) if (SOFFIT_ALIAS[S[side].soffit]) S[side].soffit = SOFFIT_ALIAS[S[side].soffit]; // 門柱の形状変更に合わせて色を更新
   }
 } catch (e) { /* storage unavailable */ }
 for (const side of ['A', 'B']) for (const z of ZONE_KEYS) if (!WALLS.concat(userProducts).some(p => p.id === S[side][z])) S[side][z] = DEFAULT[side][z];
@@ -1059,6 +1072,7 @@ function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify({ S, user
 const allWalls = () => WALLS.concat(userProducts);
 const wallById = id => allWalls().find(p => p.id === id) || TEX_ONLY.find(p => p.id === id) || WALLS[0];
 function opt(cat, val) {
+  if (cat === 'soffit' && SOFFIT_ALIAS[val]) val = SOFFIT_ALIAS[val];
   if (typeof val === 'string' && val.startsWith('#')) return { id: val, name: 'カスタム ' + val.toUpperCase(), hex: val };
   return OPTIONS[cat].find(o => o.id === val) || OPTIONS[cat][0];
 }
@@ -1217,8 +1231,16 @@ class Viewer {
     }
     M.sash.color.set(opt('sash', st.sash).hex);
     const sof = opt('soffit', st.soffit);
-    if (sof.wood) { M.soffit.map = colorTex(wallById(sof.wood)); M.soffit.normalMap = normTex('wood'); M.soffit.color.set('#ffffff'); }
-    else { M.soffit.map = null; M.soffit.normalMap = null; M.soffit.color.set(sof.hex); }
+    M.soffit.userData.want = sof.id;
+    if (sof.img) {
+      if (M.soffit.userData.have !== sof.id) { M.soffit.map = null; M.soffit.normalMap = null; M.soffit.color.set(sof.hex); }
+      imgTex(sof.img, 0.91, 0.36).then(t => {
+        if (M.soffit.userData.want !== sof.id) return;
+        M.soffit.map = t; M.soffit.normalMap = null; M.soffit.color.set('#ffffff'); M.soffit.userData.have = sof.id;
+        M.soffit.needsUpdate = true; this.dirty = true;
+      }).catch(() => {});
+    } else if (sof.wood) { M.soffit.map = colorTex(wallById(sof.wood)); M.soffit.normalMap = normTex('wood'); M.soffit.color.set('#ffffff'); M.soffit.userData.have = sof.id; }
+    else { M.soffit.map = null; M.soffit.normalMap = null; M.soffit.color.set(sof.hex); M.soffit.userData.have = sof.id; }
     M.soffit.needsUpdate = true;
     const rf = opt('roof', st.roof);
     M.roof.map = roofTex(); M.roof.normalMap = normTex('roof'); M.roof.color.set(rf.hex); M.roof.needsUpdate = true;
@@ -1330,7 +1352,7 @@ function renderDetail() {
     ${p.price ? `<div class="d-meta">${esc(p.thick)}厚・定価 ${p.price.toLocaleString()}円/枚・${p.sqm.toLocaleString()}円/㎡（税込）・張り方 ${esc(p.orient)}${p.code && p.code.includes('＊') ? '<br>品番末尾の「＊」は出荷地域によって変わります' : ''}</div>` : ''}
     ${canV ? `<label class="check"><input type="checkbox" id="vertChk" ${st.vert && st.vert[S.zone] ? 'checked' : ''}> 縦張りで表示する</label>` : ''}`;
 }
-function chipStyle(o) { return o.wood ? `background-image:url(${thumb(wallById(o.wood)).url})` : `background:${o.hex}`; }
+function chipStyle(o) { return o.img ? `background:${o.hex} url(${o.img}) center/cover` : o.wood ? `background-image:url(${thumb(wallById(o.wood)).url})` : `background:${o.hex}`; }
 function renderColors() {
   for (const box of document.querySelectorAll('.colors')) {
     const cat = box.dataset.cat, val = cur()[cat], isCustom = typeof val === 'string' && val.startsWith('#');
@@ -1485,7 +1507,7 @@ async function snapshot() {
     let y = head + ih + gap + lineH / 2;
     const rows = ZONES.map(([k, l]) => { const p = wallById(st[k]); return [l, prodLabel(p) + (p.price ? `（${p.price.toLocaleString()}円/枚）` : ''), p, null]; });
     { const sd = st.doorDesign && doorById(st.doorDesign), o = opt('door', st.door); rows.push(['玄関ドア', sd ? doorLabel(sd) : o.name, sd ? { door: sd } : (o.wood ? wallById(o.wood) : null), o.hex]); }
-    for (const cat of ['sash', 'soffit', 'roof', ...(st.gateOn !== false ? ['gate', 'gatePost'] : [])]) { const o = opt(cat, st[cat]); rows.push([CAT_LABEL[cat], o.name, o.wood ? wallById(o.wood) : null, o.hex]); }
+    for (const cat of ['sash', 'soffit', 'roof', ...(st.gateOn !== false ? ['gate', 'gatePost'] : [])]) { const o = opt(cat, st[cat]); rows.push([CAT_LABEL[cat], o.name, o.img ? { img: o.img } : o.wood ? wallById(o.wood) : null, o.hex]); }
     for (const [l, txt, tp, hex] of rows) {
       g.fillStyle = '#5f696d'; g.font = `500 ${Math.round(12 * sc)}px "Zen Kaku Gothic New", sans-serif`; g.fillText(l, x, y);
       const sx = x + 64 * sc, sw = 26 * sc, sh = 16 * sc;
