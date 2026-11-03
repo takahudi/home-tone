@@ -959,7 +959,7 @@ function buildHouse(roofType) {
   B('soffit').quad(v(G.x0, G.top, -0.15), v(G.x1, G.top, -0.15), v(G.x1, G.top, G.z1), v(G.x0, G.top, G.z1), v(0, -1, 0), X, Z, O0);
   B('gfloor').quad(v(G.x0, 0.004, 0), v(G.x1, 0.004, 0), v(G.x1, 0.004, G.z1), v(G.x0, 0.004, G.z1), Y, X, Z, O0);
   // 門柱（ガレージ左、道路側）：機能門柱＋飾り柱3本（参考写真の形状）
-  const GW = 0.65, GH = 1.35, GD = 0.2, GX = 0.875, GZ = 1.62, fz = GZ + GD / 2, gl = GX - GW / 2;
+  const GW = 0.65, GH = 1.35, GD = 0.2, GX = 1.075, GZ = 1.62, fz = GZ + GD / 2, gl = GX - GW / 2;
   B('gate').box(v(GX, GH / 2, GZ), X, Y, Z, GW, GH, GD);                                 // 本体
   B('gateDark').box(v(GX, GH + 0.012, GZ), X, Y, Z, GW + 0.02, 0.024, GD + 0.02);         // 笠木
   B('gateDark').box(v(GX, 1.035, fz + 0.007), X, Y, Z, 0.4, 0.13, 0.014);                 // ポスト投函口
