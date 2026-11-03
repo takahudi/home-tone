@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>高藤邸 外壁カラーシミュレーター</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: 左に3Dパース（1画面／2画面比較）、右に部位ごとの材料パネル。幅900px以下は縦積み */
+:root{
+  --bg:#e8ecea;
+  --surface:#ffffff;
+  --surface-2:#f3f5f4;
+  --ink:#1b2023;
+  --muted:#5f696d;
+  --line:#d3d9d6;
+  --accent:#275c7c;
+  --accent-soft:#dce8ef;
+  --on-accent:#ffffff;
+  --plan-a:#275c7c;
+  --plan-b:#9a4f24;
+  --ov-bg:rgba(255,255,255,.92);
+  --ov-ink:#1b2023;
+  --ov-muted:#5f696d;
+  --stage-bg:#c9d4dc;
+  --font-body:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141819; --surface:#1c2224; --surface-2:#232a2d; --ink:#e6eaeb; --muted:#97a2a6; --line:#2f383b;
+    --accent:#7db3d3; --accent-soft:#22343f; --on-accent:#0f1a20; --plan-a:#7db3d3; --plan-b:#e0975f;
+    --ov-bg:rgba(24,29,31,.9); --ov-ink:#e6eaeb; --ov-muted:#a3adb1; --stage-bg:#253038;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141819; --surface:#1c2224; --surface-2:#232a2d; --ink:#e6eaeb; --muted:#97a2a6; --line:#2f383b;
+  --accent:#7db3d3; --accent-soft:#22343f; --on-accent:#0f1a20; --plan-a:#7db3d3; --plan-b:#e0975f;
+  --ov-bg:rgba(24,29,31,.9); --ov-ink:#e6eaeb; --ov-muted:#a3adb1; --stage-bg:#253038;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{display:flex;flex-direction:column;height:100%;min-height:0}
+
+/* ---- top bar ---- */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{min-width:0}
+.brand h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.03em;text-wrap:balance}
+.brand p{margin:0;font-size:12px;color:var(--muted)}
+.brand .num{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.02em}
+.bar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.seg button{border:0;background:transparent;padding:6px 12px;font-size:13px;font-weight:500;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.small{padding:4px 9px;font-size:12px}
+
+/* ---- main ---- */
+.main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 372px}
+.stage-wrap{display:flex;flex-direction:column;min-width:0;min-height:0;padding-block:12px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:12px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:10px}
+.toolbar .lbl{font-size:12px;color:var(--muted);letter-spacing:.06em}
+.views{display:flex;flex-wrap:wrap;gap:6px}
+.views button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:12.5px}
+.views button:hover{border-color:var(--accent)}
+.check{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink)}
+.check input{accent-color:var(--accent)}
+.stage{flex:1;min-height:0;display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+.stage.compare{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.viewer{position:relative;min-width:0;min-height:0;border-radius:10px;overflow:hidden;background:var(--stage-bg);
+  box-shadow:0 0 0 2px transparent;transition:box-shadow .15s}
+.viewer canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.stage.compare .viewer.editing{box-shadow:0 0 0 3px var(--side-color)}
+.pane[data-side="A"]{--side-color:var(--plan-a)}
+.pane[data-side="B"]{--side-color:var(--plan-b)}
+.vtag{position:absolute;top:10px;left:10px;display:none;align-items:center;gap:6px;padding:3px 10px 3px 4px;border-radius:999px;
+  background:var(--ov-bg);color:var(--ov-ink);font-size:12px;font-weight:700;pointer-events:none}
+.vtag b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--side-color);color:#fff;font-size:12px}
+.stage.compare .vtag{display:inline-flex}
+.pane{display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0}
+.pane .viewer{flex:1}
+.legend{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:11.5px;line-height:1.35;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:3px 14px}
+.legend .row{display:grid;grid-template-columns:52px 22px minmax(0,1fr);gap:6px;align-items:center;min-width:0}
+.legend .k{color:var(--muted);font-size:11px}
+.legend .sw{width:22px;height:16px;border-radius:3px;background-size:cover;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.legend .v{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.legend .code{font-family:var(--font-mono);font-size:10.5px;margin-right:4px}
+.stage.no-legend .legend{display:none}
+.hint{position:absolute;right:10px;bottom:10px;font-size:11px;color:#22303a;background:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;pointer-events:none}
+.stage.compare .hint{display:none}
+.loading{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;color:#22303a;background:rgba(220,229,236,.6)}
+
+/* ---- panel ---- */
+.panel{min-width:0;overflow:auto;background:var(--surface);border-left:1px solid var(--line);
+  padding-block:14px 28px;padding-left:16px;padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px;align-content:start}
+.edit-target{display:none;gap:8px;align-items:center;flex-wrap:wrap;padding:10px;border-radius:10px;background:var(--surface-2)}
+.edit-target.show{display:flex}
+.edit-target .lbl{font-size:12px;color:var(--muted)}
+.tab{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 10px;font-size:13px;font-weight:500}
+.tab i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.tab[aria-pressed="true"]{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c)}
+.sec{display:grid;gap:10px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.sec h2{margin:0;font-size:14px;font-weight:700;letter-spacing:.06em}
+.sec-h .cur{font-size:12px;color:var(--muted);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zones{display:grid;gap:6px}
+.zone{display:grid;grid-template-columns:60px 46px minmax(0,1fr);gap:10px;align-items:center;text-align:left;
+  border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px}
+.zone:hover{border-color:var(--accent)}
+.zone[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.zone .zl{font-weight:700;font-size:13px}
+.zone img{width:46px;height:30px;border-radius:4px;object-fit:cover;display:block;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
+.zone .zn{font-size:12px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.zone .zn .code{font-family:var(--font-mono);font-size:11px;color:var(--muted);display:block}
+.zone-actions{display:flex;gap:6px;flex-wrap:wrap}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 10px;font-size:12px;color:var(--muted)}
+.filters button[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
+.sw-btn{position:relative;display:grid;gap:3px;align-content:start;text-align:left;border:0;background:transparent;padding:0;min-width:0}
+.sw-btn img{width:100%;aspect-ratio:1/1;border-radius:6px;object-fit:cover;display:block;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),0 0 0 1px var(--line)}
+.sw-btn[aria-pressed="true"] img{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.sw-btn .nm{font-size:11px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.sw-btn .cd{font-family:var(--font-mono);font-size:10.5px;color:var(--muted)}
+.sw-btn .badge{position:absolute;top:4px;left:4px;font-size:9.5px;padding:0 5px;border-radius:4px;background:rgba(20,30,36,.78);color:#fff;letter-spacing:.04em}
+.colors{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{width:34px;height:34px;border-radius:50%;border:0;padding:0;background-size:cover;background-position:center;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.18),0 0 0 1px var(--line)}
+.chip[aria-pressed="true"]{box-shadow:inset 0 0 0 1px rgba(0,0,0,.18),0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.chip.custom{position:relative;overflow:hidden;background:conic-gradient(#e74c3c,#f1c40f,#2ecc71,#3498db,#9b59b6,#e74c3c)}
+.chip.custom input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.note{margin:0;font-size:11.5px;color:var(--muted);line-height:1.6}
+details.add{border:1px dashed var(--line);border-radius:8px;padding:8px 10px}
+details.add summary{cursor:pointer;font-size:12.5px;font-weight:500}
+.form{display:grid;gap:8px;margin-top:10px}
+.form label{display:grid;gap:3px;font-size:12px;color:var(--muted)}
+.form input[type=text],.form select{border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--surface);color:var(--ink)}
+.form .inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.form input[type=color]{width:44px;height:30px;border:1px solid var(--line);border-radius:6px;padding:2px;background:var(--surface)}
+.user-list{display:grid;gap:4px;font-size:12px}
+.user-list div{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.user-list button{border:0;background:transparent;color:var(--muted);font-size:12px;text-decoration:underline}
+
+/* ---- modal ---- */
+.modal{position:fixed;inset:0;z-index:20;background:rgba(10,14,16,.6);display:grid;place-items:center;
+  padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
+.modal-box{background:var(--surface);border-radius:12px;max-width:min(1100px,100%);max-height:100%;overflow:auto;padding:14px;display:grid;gap:10px}
+.modal-box img{width:100%;height:auto;border-radius:6px;display:block}
+.modal-actions{display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.modal-actions p{margin:0;font-size:12px;color:var(--muted)}
+.modal-actions a{text-decoration:none}
+
+@media (max-width: 900px){
+  html,body{height:auto}
+  .app{height:auto}
+  .main{display:block}
+  .stage-wrap{padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .stage{height:66vh;min-height:420px;flex:none}
+  .panel{border-left:0;border-top:1px solid var(--line);overflow:visible}
+  .hint{display:none}
+}
+@media (prefers-reduced-motion: reduce){ .viewer{transition:none} }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="brand">
+      <h1>高藤邸 外壁カラーシミュレーター</h1>
+      <p>プランNo.2・木造3階建・インナーガレージ／<span class="num">間口 4,345 × 奥行 10,010 mm</span></p>
+    </div>
+    <div class="bar-actions">
+      <div class="seg" id="modeSeg">
+        <button type="button" data-mode="single" aria-pressed="true">1画面</button>
+        <button type="button" data-mode="compare" aria-pressed="false">2画面で比較</button>
+      </div>
+      <button type="button" class="btn primary" id="snapBtn">画像にする</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="stage-wrap" aria-label="外観パース">
+      <div class="toolbar">
+        <span class="lbl">視点</span>
+        <div class="views" id="views">
+          <button type="button" data-view="persp">南西パース</button>
+          <button type="button" data-view="nw">北西パース</button>
+          <button type="button" data-view="front">正面（西）</button>
+          <button type="button" data-view="side">側面（南）</button>
+          <button type="button" data-view="back">背面（東）</button>
+          <button type="button" data-view="bird">鳥瞰</button>
+        </div>
+        <label class="check" id="syncWrap" hidden><input type="checkbox" id="sync" checked> 2画面の視点を連動</label>
+        <label class="check"><input type="checkbox" id="legendChk" checked> 凡例</label>
+      </div>
+      <div class="stage" id="stage">
+        <div class="pane" id="pA" data-side="A">
+          <div class="viewer editing" id="vA">
+            <div class="vtag"><b>A</b>プランA</div>
+            <div class="hint">ドラッグで回転・右ドラッグで移動・ホイールで拡大／壁をクリックで部位を選択</div>
+            <div class="loading" id="loadA">外壁材を準備しています…</div>
+          </div>
+          <div class="legend" id="legA"></div>
+        </div>
+        <div class="pane" id="pB" data-side="B" hidden>
+          <div class="viewer" id="vB">
+            <div class="vtag"><b>B</b>プランB</div>
+            <div class="loading" id="loadB">外壁材を準備しています…</div>
+          </div>
+          <div class="legend" id="legB"></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel" id="panel" aria-label="材料の選択">
+      <div class="edit-target" id="editTarget">
+        <span class="lbl">編集中</span>
+        <button type="button" class="tab" data-edit="A" style="--c:var(--plan-a)"><i></i>プランA</button>
+        <button type="button" class="tab" data-edit="B" style="--c:var(--plan-b)"><i></i>プランB</button>
+        <button type="button" class="btn small" id="copyBtn">A の内容を B にコピー</button>
+      </div>
+
+      <section class="sec" id="secWall">
+        <div class="sec-h"><h2>外壁</h2><span class="cur">塗り分ける部位を選んでから材を選択</span></div>
+        <div class="zones" id="zones"></div>
+        <div class="zone-actions">
+          <button type="button" class="btn small" id="applyFloors">この材を1〜3階すべてに</button>
+          <button type="button" class="btn small" id="applyAll">ガレージも含め全部に</button>
+        </div>
+        <div class="filters" id="filters"></div>
+        <div class="grid" id="wallGrid"></div>
+        <p class="note">品番付きの2点（AH5935U・AH5933U）は外観パース資料に記載のケイミュー製品です。その他は柄と色のイメージ見本です。実際に検討中の品番は下の「外壁材を登録」から追加できます。画面の色は実物と異なるため、最終決定は実物サンプルでご確認ください。</p>
+        <details class="add">
+          <summary>外壁材を登録（品番・色を入力）</summary>
+          <form class="form" id="addForm">
+            <label>品番<input type="text" id="newCode" placeholder="例：AH5935U" autocomplete="off"></label>
+            <label>商品名・色名<input type="text" id="newName" placeholder="例：ピアレスストーン チタンホワイト" autocomplete="off"></label>
+            <label>柄<select id="newPat"></select></label>
+            <div class="inline">
+              <label>基本色<input type="color" id="newC1" value="#d8d2c6"></label>
+              <label>2色目<input type="color" id="newC2" value="#b9b0a2"></label>
+              <label class="check"><input type="checkbox" id="newMix"> 2色ミックス</label>
+            </div>
+            <div><button type="submit" class="btn primary small">登録して選択</button></div>
+            <div class="user-list" id="userList"></div>
+          </form>
+        </details>
+      </section>
+
+      <section class="sec">
+        <div class="sec-h"><h2>窓枠（サッシ）</h2><span class="cur" id="cur-sash"></span></div>
+        <div class="colors" data-cat="sash"></div>
+        <p class="note">手すり・シャッターボックス・水切りも同じ色になります。</p>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><h2>軒天</h2><span class="cur" id="cur-soffit"></span></div>
+        <div class="colors" data-cat="soffit"></div>
+        <p class="note">屋根の軒裏、3階インナーバルコニーとインナーガレージの天井に反映されます。</p>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><h2>屋根・破風</h2><span class="cur" id="cur-roof"></span></div>
+        <div class="colors" data-cat="roof"></div>
+        <div class="seg" id="roofSeg">
+          <button type="button" data-roof="mono" aria-pressed="true">片流れ（パース）</button>
+          <button type="button" data-roof="hip" aria-pressed="false">寄棟（立面図）</button>
+        </div>
+      </section>
+      <section class="sec">
+        <div class="sec-h"><h2>玄関ドア</h2><span class="cur" id="cur-door"></span></div>
+        <div class="colors" data-cat="door"></div>
+      </section>
+    </aside>
+  </main>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-box">
+    <img id="snapImg" alt="外観パースの比較画像">
+    <div class="modal-actions">
+      <p>画像を右クリック（スマホは長押し）でも保存できます。</p>
+      <div style="display:flex;gap:8px">
+        <a class="btn primary" id="dlLink" download="facade.png" href="#">PNGを保存</a>
+        <button type="button" class="btn" id="closeModal">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* =========================================================
+   建物寸法（m）— プランNo.2 平面図・立面図より
+   x: 北(0) → 南(W) / z: 西面(0) → 東(-D) / y: GL
+   ========================================================= */
+const W = 4.345, D = 10.01;
+const Y_FOUND = 0.4, Y_2F = 3.05, Y_3F = 5.95, Y_TOP = 8.3;
+const GAR = { x0: 0.15, x1: 4.17, z1: -3.64, top: 2.46, open0: 1.5 };
+const v = (x, y, z) => new THREE.Vector3(x, y, z);
+const X = v(1, 0, 0), Y = v(0, 1, 0), Z = v(0, 0, 1), O0 = v(0, 0, 0);
+
+const FACES = {
+  W: { o: v(0, 0, 0),  U: v(1, 0, 0),  N: v(0, 0, 1),  len: W }, // 西（正面・道路側）
+  S: { o: v(W, 0, 0),  U: v(0, 0, -1), N: v(1, 0, 0),  len: D }, // 南
+  E: { o: v(W, 0, -D), U: v(-1, 0, 0), N: v(0, 0, -1), len: W }, // 東
+  N: { o: v(0, 0, -D), U: v(0, 0, 1),  N: v(-1, 0, 0), len: D }, // 北
+};
+// 開口（u: 外から見て左端からの距離, y: GLからの高さ）
+const OPENINGS = [
+  { f: 'W', u0: 1.5,  u1: 4.17, y0: 0,    y1: 2.46, kind: 'garage', depth: 0.15 },
+  { f: 'W', u0: 1.42, u1: 3.07, y0: 3.9,  y1: 5.1,  kind: 'win', panes: 2, shutter: true },
+  { f: 'W', u0: 0.3,  u1: 2.0,  y0: 6.2,  y1: 7.75, kind: 'recess', depth: 0.91 },
+  { f: 'S', u0: 2.85, u1: 3.55, y0: 0,    y1: 2.4,  kind: 'pass', depth: W - GAR.x1 },
+  { f: 'S', u0: 2.98, u1: 3.5,  y0: 4.3,  y1: 5.0,  kind: 'win', panes: 1 },
+  { f: 'S', u0: 3.84, u1: 4.35, y0: 6.8,  y1: 7.55, kind: 'win', panes: 1 },
+  { f: 'E', u0: 1.39, u1: 2.57, y0: 6.8,  y1: 7.55, kind: 'win', panes: 3 },
+  { f: 'E', u0: 1.77, u1: 1.97, y0: 1.44, y1: 2.39, kind: 'win', panes: 1 },
+  { f: 'N', u0: 3.32, u1: 3.53, y0: 6.56, y1: 7.48, kind: 'win', panes: 1 },
+  { f: 'N', u0: 3.76, u1: 3.97, y0: 6.56, y1: 7.48, kind: 'win', panes: 1 },
+  { f: 'N', u0: 6.91, u1: 7.12, y0: 3.12, y1: 4.92, kind: 'win', panes: 1 },
+  { f: 'N', u0: 2.44, u1: 2.63, y0: 1.39, y1: 2.31, kind: 'win', panes: 1 },
+  { f: 'N', u0: 6.43, u1: 7.15, y0: 0,    y1: 2.4,  kind: 'pass', depth: GAR.x0 },
+];
+
+/* =========================================================
+   外壁材・各部材の候補
+   ========================================================= */
+const PATTERNS = { stone: 'ストーン', border: 'ボーダー', flat: 'フラット', wood: '木目', tile: 'タイル', vline: '縦ライン' };
+const WALLS = [
+  { id: 'AH5935U', code: 'AH5935U', name: 'レジェール ピアレスストーン QFマックス チタンホワイト', pat: 'stone', colors: ['#f0f0ec', '#f5f5f2', '#e9e8e4'], v: 0.07, doc: true },
+  { id: 'AH5933U', code: 'AH5933U', name: 'レジェール ピアレスストーン QFチャコール チタンブラック', pat: 'stone', colors: ['#3d3d3f', '#313133', '#4b4b4d'], v: 0.22, doc: true },
+  { id: 'stone-greige', name: 'ストーン グレージュ', pat: 'stone', colors: ['#bcb4a9', '#aaa197', '#cac3b9'], v: 0.12 },
+  { id: 'stone-beige', name: 'ストーン ベージュミックス', pat: 'stone', colors: ['#d8c8ac', '#c5b192', '#e4d8c4'], v: 0.12 },
+  { id: 'stone-gray', name: 'ストーン ミストグレー', pat: 'stone', colors: ['#9d9e9c', '#8a8b8a', '#b0b1af'], v: 0.12 },
+  { id: 'border-white', name: 'ボーダー ホワイト', pat: 'border', colors: ['#f1f0ec'], v: 0.08 },
+  { id: 'border-lgray', name: 'ボーダー ライトグレー', pat: 'border', colors: ['#c5c6c4'], v: 0.1 },
+  { id: 'border-navy', name: 'ボーダー ネイビー', pat: 'border', colors: ['#2d3747'], v: 0.18 },
+  { id: 'border-black', name: 'ボーダー ブラック', pat: 'border', colors: ['#2b2b2c'], v: 0.2 },
+  { id: 'flat-white', name: 'フラット ピュアホワイト', pat: 'flat', colors: ['#f3f3f1'], v: 0.06 },
+  { id: 'flat-gray', name: 'フラット ストーングレー', pat: 'flat', colors: ['#8e8f8d'], v: 0.1 },
+  { id: 'flat-charcoal', name: 'フラット チャコール', pat: 'flat', colors: ['#3e3f41'], v: 0.14 },
+  { id: 'flat-sand', name: 'フラット サンドベージュ', pat: 'flat', colors: ['#d7cbb5'], v: 0.08 },
+  { id: 'flat-sage', name: 'フラット セージグリーン', pat: 'flat', colors: ['#8f9b89'], v: 0.1 },
+  { id: 'wood-natural', name: '木目 ナチュラルオーク', pat: 'wood', colors: ['#b98c5e', '#a77a4e', '#c89b6b'], v: 0.22 },
+  { id: 'wood-walnut', name: '木目 ウォールナット', pat: 'wood', colors: ['#6b4a33', '#5a3d29', '#7b583e'], v: 0.25 },
+  { id: 'wood-gray', name: '木目 シルバーグレー', pat: 'wood', colors: ['#9b968d', '#8a857c', '#aba69d'], v: 0.2 },
+  { id: 'tile-brown', name: 'タイル ブラウンミックス', pat: 'tile', colors: ['#7a4e3a', '#8e5f46', '#6a4232'], joint: '#b8b1a5', v: 0.14 },
+  { id: 'tile-white', name: 'タイル ホワイトミックス', pat: 'tile', colors: ['#ecebe6', '#dfddd6', '#f4f3ef'], joint: '#c9c7c0', v: 0.08 },
+  { id: 'tile-black', name: 'タイル ブラックミックス', pat: 'tile', colors: ['#2f2f30', '#3b3b3c', '#242425'], joint: '#5b5b5b', v: 0.16 },
+  { id: 'vline-black', name: '縦ライン ガルバ調ブラック', pat: 'vline', colors: ['#28292b'], v: 0.15, metal: 0.35 },
+  { id: 'vline-silver', name: '縦ライン シルバー', pat: 'vline', colors: ['#a2a5a7'], v: 0.1, metal: 0.45 },
+  { id: 'vline-white', name: '縦ライン ホワイト', pat: 'vline', colors: ['#eeeeeb'], v: 0.06 },
+  { id: 'vline-navy', name: '縦ライン ネイビー', pat: 'vline', colors: ['#293548'], v: 0.15 },
+];
+const OPTIONS = {
+  sash: [
+    { id: 'black', name: 'ブラック', hex: '#252628' },
+    { id: 'shine-gray', name: 'シャイングレー', hex: '#5f6265' },
+    { id: 'stain', name: 'ステンカラー', hex: '#8e9193' },
+    { id: 'platinum', name: 'プラチナステン', hex: '#b3b5b4' },
+    { id: 'white', name: 'ホワイト', hex: '#efefed' },
+    { id: 'brown', name: 'ブラウン', hex: '#4a3a2f' },
+  ],
+  soffit: [
+    { id: 'white', name: 'ホワイト', hex: '#f1f0ec' },
+    { id: 'lightgray', name: 'ライトグレー', hex: '#c8c9c6' },
+    { id: 'darkgray', name: 'ダークグレー', hex: '#5a5c5e' },
+    { id: 'black', name: 'ブラック', hex: '#27282a' },
+    { id: 'wood-natural', name: '木目 ナチュラル', wood: 'wood-natural' },
+    { id: 'wood-walnut', name: '木目 ウォールナット', wood: 'wood-walnut' },
+  ],
+  roof: [
+    { id: 'black', name: 'グラッサ・ブラック（CC562K）', hex: '#2b2d2f' },
+    { id: 'charcoal', name: 'チャコールグレー', hex: '#4b4e51' },
+    { id: 'brown', name: 'ブラウン', hex: '#4d3d31' },
+    { id: 'green', name: 'グリーン', hex: '#3e4b40' },
+    { id: 'silver', name: 'シルバー', hex: '#8e9295' },
+  ],
+  door: [
+    { id: 'wood-natural', name: '木目 ナチュラル', wood: 'wood-natural' },
+    { id: 'wood-walnut', name: '木目 ウォールナット', wood: 'wood-walnut' },
+    { id: 'black', name: 'ブラック', hex: '#232426' },
+    { id: 'white', name: 'ホワイト', hex: '#eeeeeb' },
+    { id: 'silver', name: 'シルバー', hex: '#9a9da0' },
+  ],
+};
+const ZONES = [['f3', '3階'], ['f2', '2階'], ['f1', '1階'], ['garage', 'ガレージ']];
+const CAT_LABEL = { sash: 'サッシ', soffit: '軒天', roof: '屋根', door: 'ドア' };
+
+/* =========================================================
+   テクスチャ生成（1枚 = 1.82m × 0.91m）
+   ========================================================= */
+const TW = 1024, TH = 512, TILE_W = 1.82, TILE_H = 0.91;
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function valueNoise(w, h, cx, cy, rng) {
+  const gx = Math.max(1, Math.round(w / cx)), gy = Math.max(1, Math.round(h / cy));
+  const g = new Float32Array(gx * gy); for (let i = 0; i < g.length; i++) g[i] = rng();
+  const out = new Float32Array(w * h);
+  const xs0 = new Int32Array(w), xs1 = new Int32Array(w), xt = new Float32Array(w);
+  for (let x = 0; x < w; x++) { const f = x / w * gx, i = Math.floor(f), t = f - i; xs0[x] = i % gx; xs1[x] = (i + 1) % gx; xt[x] = t * t * (3 - 2 * t); }
+  for (let y = 0; y < h; y++) {
+    const f = y / h * gy, j = Math.floor(f); let t = f - j; t = t * t * (3 - 2 * t);
+    const r0 = (j % gy) * gx, r1 = ((j + 1) % gy) * gx;
+    for (let x = 0; x < w; x++) {
+      const a = g[r0 + xs0[x]], b = g[r0 + xs1[x]], c = g[r1 + xs0[x]], d = g[r1 + xs1[x]], tx = xt[x];
+      const top = a + (b - a) * tx, bot = c + (d - c) * tx; out[y * w + x] = top + (bot - top) * t;
+    }
+  }
+  return out;
+}
+function fbm(cx, cy, oct, rng) {
+  const out = new Float32Array(TW * TH); let amp = 1, tot = 0;
+  for (let o = 0; o < oct; o++) {
+    const n = valueNoise(TW, TH, Math.max(1, cx / 2 ** o), Math.max(1, cy / 2 ** o), rng);
+    for (let i = 0; i < out.length; i++) out[i] += n[i] * amp; tot += amp; amp *= 0.5;
+  }
+  for (let i = 0; i < out.length; i++) out[i] /= tot;
+  return out;
+}
+function newPat() { const N = TW * TH; return { h: new Float32Array(N), s: new Float32Array(N), id: new Float32Array(N), k: 4 }; }
+
+const GEN = {
+  stone() { // 石積み調（ピアレスストーン系）
+    const rng = mulberry32(11), P = newPat(), { h, s, id } = P; P.k = 3.5;
+    const n1 = fbm(48, 48, 4, rng), n2 = fbm(6, 6, 2, rng), st = fbm(160, 10, 3, rng);
+    const RH = [44, 56, 68, 84, 100]; let y = 0; const rows = [];
+    while (y < TH) { let rh = RH[Math.floor(rng() * RH.length)]; if (TH - y - rh < 44) rh = TH - y; rows.push([y, rh]); y += rh; }
+    function fill(x0, len, ya, yb) {
+      const depth = 0.45 + rng() * 0.55, tone = rng(), pid = rng(), tilt = (rng() - 0.5) * 0.3;
+      for (let yy = ya; yy < yb; yy++) for (let xx = 0; xx < len; xx++) {
+        const i = yy * TW + (x0 + xx) % TW;
+        const ex = Math.min(xx, len - 1 - xx), ey = Math.min(yy - ya, yb - 1 - yy);
+        id[i] = pid;
+        if (ey < 2 || ex < 1) { h[i] = 0.05; s[i] = -0.45; continue; }
+        const bev = Math.min(1, Math.min(ex * 0.6, ey - 1) / 6);
+        h[i] = bev * (depth * (0.8 + 0.2 * n1[i]) + (st[i] - 0.5) * 0.25 * depth + (n2[i] - 0.5) * 0.1 + tilt * (xx / len - 0.5));
+        s[i] = (tone - 0.5) * 0.6 + (n1[i] - 0.5) * 0.6 + (n2[i] - 0.5) * 0.3 + (st[i] - 0.5) * 0.4;
+      }
+    }
+    for (const [y0, rh] of rows) {
+      let x = Math.floor(rng() * TW), rem = TW;
+      while (rem > 0) {
+        let len = 160 + Math.floor(rng() * 380); if (rem - len < 140) len = rem;
+        if (rh >= 68 && rng() < 0.35) { const cut = y0 + Math.floor(rh * (0.35 + rng() * 0.3)); fill(x, len, y0, cut); fill(x, len, cut, y0 + rh); }
+        else fill(x, len, y0, y0 + rh);
+        x = (x + len) % TW; rem -= len;
+      }
+    }
+    return P;
+  },
+  border() { // 横ボーダー
+    const rng = mulberry32(23), P = newPat(), { h, s } = P; P.k = 4;
+    const n2 = fbm(4, 4, 2, rng), br = fbm(256, 3, 3, rng);
+    for (let band = 0; band < 2; band++) {
+      const by = band * 256;
+      for (let yy = by; yy < by + 4; yy++) for (let x = 0; x < TW; x++) { const i = yy * TW + x; h[i] = 0; s[i] = -0.7; }
+      let y = by + 4;
+      while (y < by + 256) {
+        let sh = 16 + Math.floor(rng() * 34); if (by + 256 - y - sh < 16) sh = by + 256 - y;
+        const depth = 0.65 + rng() * 0.35, tone = rng();
+        for (let yy = y; yy < y + sh; yy++) for (let x = 0; x < TW; x++) {
+          const i = yy * TW + x;
+          if (yy >= y + sh - 3) { h[i] = 0.15; s[i] = -0.45; continue; }
+          const bev = Math.min(1, (yy - y + 1) / 4);
+          h[i] = bev * (depth + (br[i] - 0.5) * 0.15 + (n2[i] - 0.5) * 0.05);
+          s[i] = (tone - 0.5) * 0.5 + (br[i] - 0.5) * 0.8 + (n2[i] - 0.5) * 0.3;
+        }
+        y += sh;
+      }
+    }
+    return P;
+  },
+  flat() { // フラット（塗り壁調）
+    const rng = mulberry32(37), P = newPat(), { h, s } = P; P.k = 3;
+    const n1 = fbm(24, 24, 4, rng), n2 = fbm(3, 3, 2, rng);
+    for (let i = 0; i < h.length; i++) {
+      const jy = Math.floor(i / TW) % 256;
+      if (jy < 3) { h[i] = 0.1; s[i] = -0.55; }
+      else { h[i] = 0.8 + (n1[i] - 0.5) * 0.12 + (n2[i] - 0.5) * 0.12; s[i] = (n1[i] - 0.5) * 0.5 + (n2[i] - 0.5) * 0.35; }
+    }
+    return P;
+  },
+  wood() { // 木目（縦張り）
+    const rng = mulberry32(51), P = newPat(), { h, s, id } = P; P.k = 3;
+    const gr = fbm(5, 170, 4, rng), n2 = fbm(3, 3, 1, rng), bw = 64;
+    const tones = Array.from({ length: TW / bw }, rng), ids = Array.from({ length: TW / bw }, rng);
+    for (let y = 0; y < TH; y++) for (let x = 0; x < TW; x++) {
+      const i = y * TW + x, b = Math.floor(x / bw), px = x % bw; id[i] = ids[b];
+      if (px < 3) { h[i] = 0.05; s[i] = -0.7; continue; }
+      const e = Math.min(px - 3, bw - 1 - px), bev = Math.min(1, (e + 1) / 3);
+      h[i] = bev * (0.85 + (gr[i] - 0.5) * 0.15);
+      s[i] = (tones[b] - 0.5) * 0.7 + (gr[i] - 0.5) * 1.4 + (n2[i] - 0.5) * 0.2;
+    }
+    return P;
+  },
+  tile() { // タイル・レンガ調
+    const rng = mulberry32(67), P = newPat(), { h, s, id } = P; P.k = 4;
+    const n1 = fbm(40, 40, 3, rng), n2 = fbm(4, 4, 2, rng), rowH = 32, bl = 128;
+    const tones = Array.from({ length: TH / rowH }, () => Array.from({ length: TW / bl }, rng));
+    const ids = Array.from({ length: TH / rowH }, () => Array.from({ length: TW / bl }, rng));
+    for (let y = 0; y < TH; y++) {
+      const r = Math.floor(y / rowH), yy = y % rowH, off = (r % 2) * 64;
+      for (let x = 0; x < TW; x++) {
+        const i = y * TW + x, xx = (x + off) % TW, b = Math.floor(xx / bl), px = xx % bl;
+        if (yy < 4 || px < 4) { h[i] = 0.12; s[i] = (n2[i] - 0.5) * 0.4; id[i] = -1; continue; }
+        const e = Math.min(yy - 4, rowH - 1 - yy, px - 4, bl - 1 - px), bev = Math.min(1, (e + 1) / 3);
+        h[i] = bev * (0.85 + (n1[i] - 0.5) * 0.2 + (n2[i] - 0.5) * 0.15);
+        s[i] = (tones[r][b] - 0.5) * 0.6 + (n1[i] - 0.5) * 0.6 + (n2[i] - 0.5) * 0.5; id[i] = ids[r][b];
+      }
+    }
+    return P;
+  },
+  vline() { // 縦ライン（金属サイディング調）
+    const rng = mulberry32(79), P = newPat(), { h, s } = P; P.k = 4;
+    const n2 = fbm(3, 40, 2, rng);
+    for (let y = 0; y < TH; y++) for (let x = 0; x < TW; x++) {
+      const i = y * TW + x, p = x % 64;
+      let hv; if (p < 6) hv = 0.15; else if (p < 9) hv = 0.15 + (p - 6) / 3 * 0.75; else if (p < 61) hv = 0.9; else hv = 0.9 - (p - 60) / 4 * 0.75;
+      h[i] = hv; s[i] = (n2[i] - 0.5) * 0.35 + (p < 6 ? -0.4 : 0);
+    }
+    return P;
+  },
+  roof() { // 化粧スレート（コロニアル調）
+    const rng = mulberry32(91), P = newPat(), { h, s } = P; P.k = 3;
+    const streak = fbm(3, 80, 3, rng), n2 = fbm(6, 6, 2, rng), rowH = 128;
+    for (let y = 0; y < TH; y++) {
+      const r = Math.floor(y / rowH), yy = y % rowH, t = yy / rowH;
+      for (let x = 0; x < TW; x++) {
+        const i = y * TW + x, xx = (x + (r % 2) * 256) % 512;
+        if (xx < 3) { h[i] = 0.3 * t; s[i] = -0.8; continue; }
+        h[i] = 0.15 + 0.85 * t + (streak[i] - 0.5) * 0.2;
+        s[i] = (streak[i] - 0.5) * 1.2 + (n2[i] - 0.5) * 0.3 - (yy > rowH - 4 ? 0.6 : 0);
+      }
+    }
+    return P;
+  },
+};
+const PAT = {};
+const pat = k => PAT[k] || (PAT[k] = GEN[k]());
+const mkCanvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+const hexRgb = hex => { const n = parseInt(hex.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+
+function colorize(P, prod, step = 1, light = false) {
+  const w = TW / step, hh = TH / step, c = mkCanvas(w, hh), ctx = c.getContext('2d'), img = ctx.createImageData(w, hh), d = img.data;
+  const pal = prod.colors.map(hexRgb), n = pal.length, vv = prod.v ?? 0.12;
+  const joint = prod.joint ? hexRgb(prod.joint) : pal[0].map(x => x * 0.78);
+  const L = [-0.45, 0.6, 0.66];
+  for (let y = 0; y < hh; y++) for (let x = 0; x < w; x++) {
+    const sx = x * step, sy = y * step, i = sy * TW + sx;
+    const idv = P.id[i]; const col = idv < 0 ? joint : pal[Math.min(n - 1, Math.floor(idv * n))];
+    let f = (1 + P.s[i] * vv) * (0.9 + 0.1 * Math.min(1, Math.max(0, P.h[i] * 1.3)));
+    if (light) {
+      const xl = (sx - 1 + TW) % TW, xr = (sx + 1) % TW, yu = (sy - 1 + TH) % TH, yd = (sy + 1) % TH;
+      const dx = (P.h[sy * TW + xr] - P.h[sy * TW + xl]) * P.k / 2, dy = (P.h[yu * TW + sx] - P.h[yd * TW + sx]) * P.k / 2;
+      const len = Math.hypot(dx, dy, 1); const lam = (-dx * L[0] - dy * L[1] + L[2]) / len;
+      f *= 0.55 + 0.5 * lam;
+    }
+    const o = (y * w + x) * 4;
+    d[o] = Math.min(255, col[0] * f); d[o + 1] = Math.min(255, col[1] * f); d[o + 2] = Math.min(255, col[2] * f); d[o + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  return c;
+}
+function normalCanvas(P) {
+  const c = mkCanvas(TW, TH), ctx = c.getContext('2d'), img = ctx.createImageData(TW, TH), d = img.data, h = P.h, k = P.k / 2;
+  for (let y = 0; y < TH; y++) {
+    const yu = (y - 1 + TH) % TH, yd = (y + 1) % TH;
+    for (let x = 0; x < TW; x++) {
+      const xl = (x - 1 + TW) % TW, xr = (x + 1) % TW;
+      const nx = -(h[y * TW + xr] - h[y * TW + xl]) * k, ny = -(h[yu * TW + x] - h[yd * TW + x]) * k;
+      const len = Math.hypot(nx, ny, 1), o = (y * TW + x) * 4;
+      d[o] = (nx / len * 0.5 + 0.5) * 255; d[o + 1] = (ny / len * 0.5 + 0.5) * 255; d[o + 2] = (1 / len * 0.5 + 0.5) * 255; d[o + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return c;
+}
+function toTex(canvas, srgb) {
+  const t = new THREE.CanvasTexture(canvas);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1 / TILE_W, 1 / TILE_H); t.anisotropy = 8;
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const NORM = {}, COLT = {}, THUMB = {};
+const normTex = k => NORM[k] || (NORM[k] = toTex(normalCanvas(pat(k)), false));
+function colorTex(prod) { const key = prod.id + '|' + prod.colors.join(); return COLT[key] || (COLT[key] = toTex(colorize(pat(prod.pat), prod), true)); }
+function thumb(prod) {
+  const key = prod.id + '|' + prod.colors.join(); if (THUMB[key]) return THUMB[key];
+  const big = colorize(pat(prod.pat), prod, 4, true), c = mkCanvas(128, 128);
+  c.getContext('2d').drawImage(big, 64, 0, 128, 128, 0, 0, 128, 128);
+  return THUMB[key] = { canvas: c, url: c.toDataURL('image/png') };
+}
+let ROOF_TEX = null;
+const roofTex = () => ROOF_TEX || (ROOF_TEX = toTex(colorize(pat('roof'), { colors: ['#e9e9e9'], v: 0.35 }), true));
+
+function makeSky() {
+  const c = mkCanvas(2048, 1024), g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 1024);
+  gr.addColorStop(0, '#2c66b5'); gr.addColorStop(0.28, '#5a90d1'); gr.addColorStop(0.45, '#a8c7e5'); gr.addColorStop(0.5, '#e3ebf0');
+  gr.addColorStop(0.502, '#d3d5d0'); gr.addColorStop(1, '#8f8c84');
+  g.fillStyle = gr; g.fillRect(0, 0, 2048, 1024);
+  const rng = mulberry32(5);
+  for (let k = 0; k < 60; k++) {
+    const cx = rng() * 2048, cy = 300 + rng() * 190, r = 26 + rng() * 70;
+    for (let j = 0; j < 6; j++) {
+      const x = cx + (rng() - 0.5) * r * 3, y = cy + (rng() - 0.5) * r * 0.5, rr = r * (0.5 + rng() * 0.6);
+      for (const ox of [-2048, 0, 2048]) {
+        const rg = g.createRadialGradient(x + ox, y, 0, x + ox, y, rr);
+        rg.addColorStop(0, 'rgba(255,255,255,0.55)'); rg.addColorStop(1, 'rgba(255,255,255,0)');
+        g.save(); g.translate(x + ox, y); g.scale(2.2, 1); g.translate(-(x + ox), -y);
+        g.fillStyle = rg; g.beginPath(); g.arc(x + ox, y, rr, 0, Math.PI * 2); g.fill(); g.restore();
+      }
+    }
+  }
+  const t = new THREE.CanvasTexture(c); t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+/* =========================================================
+   形状生成
+   ========================================================= */
+class GB {
+  constructor() { this.p = []; this.n = []; this.t = []; }
+  _push(pts, n, U, V, O) {
+    for (const q of pts) {
+      this.p.push(q.x, q.y, q.z); this.n.push(n.x, n.y, n.z);
+      const dx = q.x - O.x, dy = q.y - O.y, dz = q.z - O.z;
+      this.t.push(dx * U.x + dy * U.y + dz * U.z, dx * V.x + dy * V.y + dz * V.z);
+    }
+  }
+  tri(a, b, c, n, U, V, O = a) {
+    const cr = new THREE.Vector3().subVectors(b, a).cross(new THREE.Vector3().subVectors(c, a));
+    if (cr.dot(n) < 0) [b, c] = [c, b];
+    this._push([a, b, c], n, U, V, O);
+  }
+  quad(a, b, c, d, n, U, V, O = a) { this.tri(a, b, c, n, U, V, O); this.tri(a, c, d, n, U, V, O); }
+  box(c, A, B, C, sa, sb, sc) {
+    const ax = [[A, sa], [B, sb], [C, sc]];
+    for (let i = 0; i < 3; i++) {
+      const [n, hn] = ax[i], [p, hp] = ax[(i + 1) % 3], [q, hq] = ax[(i + 2) % 3];
+      for (const sg of [1, -1]) {
+        const nn = n.clone().multiplyScalar(sg), cc = c.clone().addScaledVector(n, sg * hn / 2);
+        const pt = (a, b) => cc.clone().addScaledVector(p, a * hp / 2).addScaledVector(q, b * hq / 2);
+        this.quad(pt(-1, -1), pt(1, -1), pt(1, 1), pt(-1, 1), nn, p, q, c);
+      }
+    }
+  }
+  geo() {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(this.p, 3));
+    g.setAttribute('normal', new THREE.Float32BufferAttribute(this.n, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(this.t, 2));
+    g.computeBoundingSphere();
+    return g;
+  }
+}
+const P = (F, u, y, t = 0) => F.o.clone().addScaledVector(F.U, u).setY(y).addScaledVector(F.N, -t);
+const bandAt = y => y < Y_FOUND ? 'found' : y < Y_2F ? 'f1' : y < Y_3F ? 'f2' : 'f3';
+const BAND_LINES = [Y_FOUND, Y_2F, Y_3F];
+
+function wallRegion(B, F, ua, ub, ya, yb, holes, fixed) {
+  const us = new Set([ua, ub]), ys = new Set([ya, yb]);
+  if (!fixed) for (const y of BAND_LINES) if (y > ya && y < yb) ys.add(y);
+  for (const h of holes) {
+    for (const u of [h.u0, h.u1]) if (u > ua && u < ub) us.add(u);
+    for (const y of [h.y0, h.y1]) if (y > ya && y < yb) ys.add(y);
+  }
+  const U = [...us].sort((a, b) => a - b), Ys = [...ys].sort((a, b) => a - b);
+  for (let i = 0; i < U.length - 1; i++) for (let j = 0; j < Ys.length - 1; j++) {
+    const u0 = U[i], u1 = U[i + 1], y0 = Ys[j], y1 = Ys[j + 1], uc = (u0 + u1) / 2, yc = (y0 + y1) / 2;
+    if (holes.some(h => uc > h.u0 && uc < h.u1 && yc > h.y0 && yc < h.y1)) continue;
+    B(fixed || bandAt(yc)).quad(P(F, u0, y0), P(F, u1, y0), P(F, u1, y1), P(F, u0, y1), F.N, F.U, Y, F.o);
+  }
+}
+function reveals(B, F, o, opt = {}) {
+  const d = o.depth ?? 0.05, neg = F.U.clone().negate();
+  const cuts = [o.y0, ...(opt.fixed ? [] : BAND_LINES.filter(y => y > o.y0 && y < o.y1)), o.y1];
+  for (let i = 0; i < cuts.length - 1; i++) {
+    const a = cuts[i], b = cuts[i + 1], key = opt.fixed || bandAt((a + b) / 2);
+    B(key).quad(P(F, o.u0, a, 0), P(F, o.u0, a, d), P(F, o.u0, b, d), P(F, o.u0, b, 0), F.U, F.N, Y, F.o);
+    B(key).quad(P(F, o.u1, a, 0), P(F, o.u1, a, d), P(F, o.u1, b, d), P(F, o.u1, b, 0), neg, F.N, Y, F.o);
+  }
+  const head = opt.head || opt.fixed || bandAt(o.y1 - 1e-3);
+  B(head).quad(P(F, o.u0, o.y1, 0), P(F, o.u1, o.y1, 0), P(F, o.u1, o.y1, d), P(F, o.u0, o.y1, d), v(0, -1, 0), F.U, F.N, F.o);
+  if (opt.sill) {
+    const key = typeof opt.sill === 'string' ? opt.sill : (opt.fixed || bandAt(o.y0 + 1e-3));
+    B(key).quad(P(F, o.u0, o.y0, 0), P(F, o.u1, o.y0, 0), P(F, o.u1, o.y0, d), P(F, o.u0, o.y0, d), Y, F.U, F.N, F.o);
+  }
+}
+const boxF = (B, key, F, u, y, t, su, sy, st) => B(key).box(P(F, u, y, t), F.U, Y, F.N, su, sy, st);
+function ring(B, F, u0, u1, y0, y1, fw, tc, fd, key = 'sash') {
+  const w = u1 - u0, h = y1 - y0, uc = (u0 + u1) / 2, yc = (y0 + y1) / 2;
+  boxF(B, key, F, u0 + fw / 2, yc, tc, fw, h, fd); boxF(B, key, F, u1 - fw / 2, yc, tc, fw, h, fd);
+  boxF(B, key, F, uc, y1 - fw / 2, tc, w - 2 * fw, fw, fd); boxF(B, key, F, uc, y0 + fw / 2, tc, w - 2 * fw, fw, fd);
+}
+function addWindow(B, F, o) {
+  reveals(B, F, o, { sill: true });
+  const w = o.u1 - o.u0, fw = Math.min(0.045, w * 0.22);
+  ring(B, F, o.u0, o.u1, o.y0, o.y1, fw, 0.08, 0.06);
+  B('glass').quad(P(F, o.u0 + fw, o.y0 + fw, 0.1), P(F, o.u1 - fw, o.y0 + fw, 0.1), P(F, o.u1 - fw, o.y1 - fw, 0.1), P(F, o.u0 + fw, o.y1 - fw, 0.1), F.N, F.U, Y, F.o);
+  const n = o.panes || 1;
+  if (n > 1) {
+    const iw = (w - 2 * fw) / n;
+    for (let i = 0; i < n; i++) { const a = o.u0 + fw + i * iw; ring(B, F, a, a + iw, o.y0 + fw, o.y1 - fw, 0.03, 0.07 + (i % 2) * 0.015, 0.02); }
+  }
+  if (o.shutter) boxF(B, 'sash', F, (o.u0 + o.u1) / 2, o.y1 + 0.13, -0.1, w + 0.14, 0.26, 0.22);
+}
+function trims(B) {
+  const lines = [[Y_FOUND, 0.035, 0.03, 'sash'], [Y_2F, 0.016, 0.012, 'trim2'], [Y_3F, 0.016, 0.012, 'trim3']];
+  for (const fk of ['W', 'S', 'E', 'N']) {
+    const F = FACES[fk], ops = OPENINGS.filter(o => o.f === fk);
+    for (const [y, h, pr, key] of lines) {
+      const cuts = ops.filter(o => o.y0 < y + h && o.y1 > y).map(o => [o.u0, o.u1]).sort((a, b) => a[0] - b[0]);
+      const segs = []; let a = -pr;
+      for (const [c0, c1] of cuts) { if (c0 > a) segs.push([a, c0]); a = Math.max(a, c1); }
+      if (a < F.len + pr) segs.push([a, F.len + pr]);
+      for (const [s0, s1] of segs) if (s1 - s0 > 0.01) boxF(B, key, F, (s0 + s1) / 2, y + h / 2 - 0.004, -pr / 2, s1 - s0, h, pr);
+    }
+  }
+}
+function roofMono(B) {
+  const R = 0.5, T = 0.16, of = 0.25, ob = 0.3, os = 0.15;
+  const yw = z => Y_TOP + R * (D + z) / D;
+  const xa = -os, xb = W + os, zf = of, zb = -D - ob;
+  const nTop = v(0, 1, -R / D).normalize(), nBot = nTop.clone().negate(), up = v(0, T, 0);
+  const sl = v(0, R / D, 1).normalize();
+  const a = v(xa, yw(zf), zf), b = v(xb, yw(zf), zf), c = v(xb, yw(zb), zb), d = v(xa, yw(zb), zb);
+  const [a2, b2, c2, d2] = [a, b, c, d].map(p => p.clone().add(up));
+  B('soffit').quad(a, b, c, d, nBot, X, sl, a);
+  B('roof').quad(a2, b2, c2, d2, nTop, X, sl, a2);
+  B('fascia').quad(a, b, b2, a2, Z, X, Y, a);
+  B('fascia').quad(d, c, c2, d2, v(0, 0, -1), X, Y, d);
+  B('fascia').quad(a, d, d2, a2, v(-1, 0, 0), Z, Y, a);
+  B('fascia').quad(b, c, c2, b2, X, Z, Y, b);
+  const FW = FACES.W, FS = FACES.S, FN = FACES.N;
+  B('f3').quad(P(FW, 0, Y_TOP), P(FW, W, Y_TOP), P(FW, W, Y_TOP + R), P(FW, 0, Y_TOP + R), FW.N, FW.U, Y, FW.o);
+  B('f3').tri(P(FS, 0, Y_TOP), P(FS, D, Y_TOP), P(FS, 0, Y_TOP + R), FS.N, FS.U, Y, FS.o);
+  B('f3').tri(P(FN, 0, Y_TOP), P(FN, D, Y_TOP), P(FN, D, Y_TOP + R), FN.N, FN.U, Y, FN.o);
+}
+function roofHip(B) {
+  const o = 0.35, fh = 0.15, ye = Y_TOP + fh, pitch = 0.35, yr = ye + pitch * (W / 2 + o);
+  const xa = -o, xb = W + o, zf = o, zb = -D - o, r1 = v(W / 2, yr, -W / 2), r2 = v(W / 2, yr, -D + W / 2);
+  const A = v(xa, ye, zf), Bc = v(xb, ye, zf), C = v(xb, ye, zb), Dd = v(xa, ye, zb);
+  const face = (pts) => {
+    const n = new THREE.Vector3().subVectors(pts[1], pts[0]).cross(new THREE.Vector3().subVectors(pts[2], pts[0])).normalize();
+    if (n.y < 0) n.negate();
+    const U = new THREE.Vector3().subVectors(pts[1], pts[0]).normalize();
+    const V = new THREE.Vector3().crossVectors(n, U).normalize(); if (V.y < 0) V.negate();
+    if (pts.length === 4) B('roof').quad(pts[0], pts[1], pts[2], pts[3], n, U, V, pts[0]);
+    else B('roof').tri(pts[0], pts[1], pts[2], n, U, V, pts[0]);
+  };
+  face([Bc, C, r2, r1]); face([Dd, A, r1, r2]); face([A, Bc, r1]); face([C, Dd, r2]);
+  const dn = v(0, -1, 0), ys = Y_TOP;
+  B('soffit').quad(v(xa, ys, zf), v(xb, ys, zf), v(xb, ys, 0), v(xa, ys, 0), dn, X, Z, O0);
+  B('soffit').quad(v(xa, ys, -D), v(xb, ys, -D), v(xb, ys, zb), v(xa, ys, zb), dn, X, Z, O0);
+  B('soffit').quad(v(xa, ys, 0), v(0, ys, 0), v(0, ys, -D), v(xa, ys, -D), dn, X, Z, O0);
+  B('soffit').quad(v(W, ys, 0), v(xb, ys, 0), v(xb, ys, -D), v(W, ys, -D), dn, X, Z, O0);
+  const lo = (x, z) => v(x, ys, z), hi = (x, z) => v(x, ye, z);
+  B('fascia').quad(lo(xa, zf), lo(xb, zf), hi(xb, zf), hi(xa, zf), Z, X, Y, O0);
+  B('fascia').quad(lo(xa, zb), lo(xb, zb), hi(xb, zb), hi(xa, zb), v(0, 0, -1), X, Y, O0);
+  B('fascia').quad(lo(xa, zf), lo(xa, zb), hi(xa, zb), hi(xa, zf), v(-1, 0, 0), Z, Y, O0);
+  B('fascia').quad(lo(xb, zf), lo(xb, zb), hi(xb, zb), hi(xb, zf), X, Z, Y, O0);
+  B('fascia').box(v(W / 2, yr + 0.03, (r1.z + r2.z) / 2), X, Y, Z, 0.18, 0.08, r1.z - r2.z + 0.1);
+}
+function buildHouse(roofType) {
+  const Bs = {}; const B = k => Bs[k] || (Bs[k] = new GB());
+  for (const fk of ['W', 'S', 'E', 'N']) {
+    const F = FACES[fk], ops = OPENINGS.filter(o => o.f === fk);
+    wallRegion(B, F, 0, F.len, 0, Y_TOP, ops);
+    for (const o of ops) {
+      if (o.kind === 'win') addWindow(B, F, o);
+      else if (o.kind === 'garage') reveals(B, F, o, { head: 'soffit' });
+      else if (o.kind === 'pass') reveals(B, F, o);
+      else if (o.kind === 'recess') reveals(B, F, o, { head: 'soffit', sill: 'deck' });
+    }
+  }
+  // 3階インナーバルコニー
+  const RD = 0.91, WR = { o: v(0, 0, -RD), U: X, N: Z };
+  const rwin = { u0: 0.7, u1: 1.9, y0: 6.25, y1: 7.5, panes: 2 };
+  wallRegion(B, WR, 0.3, 2.0, 6.2, 7.75, [rwin]);
+  addWindow(B, WR, rwin);
+  const FW = FACES.W;
+  for (const u of [0.36, 1.15, 1.94]) boxF(B, 'sash', FW, u, 6.5, 0.05, 0.04, 0.6, 0.04);
+  for (const y of [6.36, 6.5, 6.64]) boxF(B, 'sash', FW, 1.15, y, 0.04, 1.64, 0.03, 0.02);
+  boxF(B, 'sash', FW, 1.15, 6.8, 0.05, 1.7, 0.04, 0.06);
+  // インナーガレージ
+  const G = GAR;
+  const GBK = { o: v(0, 0, G.z1), U: X, N: Z };
+  const door = { u0: 1.0, u1: 1.85, y0: 0.17, y1: 2.27, depth: 0.04 };
+  wallRegion(B, GBK, G.x0, G.x1, 0, G.top, [door], 'garage');
+  reveals(B, GBK, door, { fixed: 'garage', sill: 'garage' });
+  B('door').quad(P(GBK, door.u0, door.y0, 0.04), P(GBK, door.u1, door.y0, 0.04), P(GBK, door.u1, door.y1, 0.04), P(GBK, door.u0, door.y1, 0.04), Z, X, Y, O0);
+  ring(B, GBK, door.u0 - 0.035, door.u1 + 0.035, door.y0, door.y1 + 0.035, 0.04, 0.02, 0.05);
+  boxF(B, 'handle', GBK, door.u1 - 0.1, 1.15, 0.015, 0.025, 0.75, 0.03);
+  B('tile').box(v((door.u0 + door.u1) / 2, 0.085, G.z1 + 0.22), X, Y, Z, 1.15, 0.17, 0.44);
+  const GN = { o: v(G.x0, 0, 0), U: v(0, 0, -1), N: X };
+  wallRegion(B, GN, 0.15, -G.z1, 0, G.top, [{ u0: 2.86, u1: 3.58, y0: 0, y1: 2.4 }], 'garage');
+  const GS = { o: v(G.x1, 0, G.z1), U: Z, N: v(-1, 0, 0) };
+  wallRegion(B, GS, 0, -G.z1 - 0.15, 0, G.top, [{ u0: 0.09, u1: 0.79, y0: 0, y1: 2.4 }], 'garage');
+  const GF = { o: v(G.open0, 0, -0.15), U: v(-1, 0, 0), N: v(0, 0, -1) };
+  wallRegion(B, GF, 0, G.open0 - G.x0, 0, G.top, [], 'garage');
+  B('soffit').quad(v(G.x0, G.top, -0.15), v(G.x1, G.top, -0.15), v(G.x1, G.top, G.z1), v(G.x0, G.top, G.z1), v(0, -1, 0), X, Z, O0);
+  B('gfloor').quad(v(G.x0, 0.004, 0), v(G.x1, 0.004, 0), v(G.x1, 0.004, G.z1), v(G.x0, 0.004, G.z1), Y, X, Z, O0);
+  trims(B);
+  if (roofType === 'hip') roofHip(B); else roofMono(B);
+  const out = {}; for (const k in Bs) out[k] = Bs[k].geo();
+  return out;
+}
+
+/* =========================================================
+   状態
+   ========================================================= */
+const STORE_KEY = 'kmew-facade-sim-v1';
+const DEFAULT = {
+  mode: 'single', edit: 'A', zone: 'f3', sync: true, roofType: 'mono', legend: true, filter: 'all',
+  A: { f3: 'AH5935U', f2: 'AH5935U', f1: 'AH5935U', garage: 'AH5933U', sash: 'black', soffit: 'wood-natural', roof: 'black', door: 'wood-natural' },
+  B: { f3: 'AH5933U', f2: 'AH5935U', f1: 'AH5935U', garage: 'wood-walnut', sash: 'black', soffit: 'black', roof: 'black', door: 'black' },
+};
+let userProducts = [];
+let S = structuredClone(DEFAULT);
+try {
+  const raw = localStorage.getItem(STORE_KEY);
+  if (raw) {
+    const saved = JSON.parse(raw);
+    if (Array.isArray(saved.userProducts)) userProducts = saved.userProducts.filter(p => p && p.id && PATTERNS[p.pat] && Array.isArray(p.colors));
+    if (saved.S) S = { ...S, ...saved.S, A: { ...DEFAULT.A, ...(saved.S.A || {}) }, B: { ...DEFAULT.B, ...(saved.S.B || {}) } };
+  }
+} catch (e) { /* storage unavailable */ }
+if (window.matchMedia('(max-width: 700px)').matches) S.legend = false;
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify({ S, userProducts })); } catch (e) { /* ignore */ } }
+
+const allWalls = () => WALLS.concat(userProducts);
+const wallById = id => allWalls().find(p => p.id === id) || WALLS[0];
+function opt(cat, val) {
+  if (typeof val === 'string' && val.startsWith('#')) return { id: val, name: 'カスタム ' + val.toUpperCase(), hex: val };
+  return OPTIONS[cat].find(o => o.id === val) || OPTIONS[cat][0];
+}
+const prodLabel = p => (p.code ? p.code + ' ' : '') + p.name;
+
+/* =========================================================
+   ビューア
+   ========================================================= */
+const SKY = makeSky();
+const VIEWS = {
+  persp: { pos: [10.5, 1.6, 13.5], tgt: [W / 2 - 0.2, 4.7, -2.2], need: 0.95 },
+  nw:    { pos: [-8.5, 1.6, 13.5], tgt: [W / 2 + 0.2, 4.7, -2.2], need: 0.95 },
+  front: { pos: [W / 2, 4.5, 22], tgt: [W / 2, 4.5, 0], need: 0.62 },
+  side:  { pos: [26, 4.5, -D / 2], tgt: [W / 2, 4.5, -D / 2], need: 1.45 },
+  back:  { pos: [W / 2 - 7, 2.2, -D - 15], tgt: [W / 2, 4.6, -D / 2 - 1], need: 0.95 },
+  bird:  { pos: [17, 17, 13], tgt: [W / 2, 3.4, -D / 2 + 1], need: 1.25 },
+};
+
+function makeMats() {
+  const std = o => new THREE.MeshStandardMaterial(o);
+  const m = {
+    f1: std({ roughness: 0.88 }), f2: std({ roughness: 0.88 }), f3: std({ roughness: 0.88 }), garage: std({ roughness: 0.88 }),
+    found: std({ color: '#bebdb7', roughness: 0.95 }),
+    soffit: std({ roughness: 0.8 }), roof: std({ roughness: 0.75 }), fascia: std({ roughness: 0.55, metalness: 0.2 }),
+    deck: std({ color: '#8f9190', roughness: 0.9 }), gfloor: std({ color: '#c6c5bf', roughness: 0.95 }),
+    sash: std({ roughness: 0.42, metalness: 0.35 }),
+    glass: std({ color: '#71808c', roughness: 0.03, metalness: 0.9 }),
+    door: std({ roughness: 0.55 }), tile: std({ color: '#76736e', roughness: 0.8 }),
+    handle: std({ color: '#1c1c1e', roughness: 0.3, metalness: 0.8 }),
+  };
+  m.trim2 = m.sash; m.trim3 = m.sash;
+  for (const k of ['f1', 'f2', 'f3', 'garage', 'door']) m[k].normalScale = new THREE.Vector2(1, 1);
+  return m;
+}
+function buildSite(scene) {
+  const add = (geo, color, pos, rough = 0.95) => {
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color, roughness: rough }));
+    m.position.set(...pos); m.receiveShadow = true; scene.add(m); return m;
+  };
+  const flat = (w, d) => new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2);
+  add(flat(400, 400), '#a5a399', [0, 0, 0]);
+  add(flat(W + 1.2, 2.0), '#cfcdc6', [W / 2, 0.006, 1.0]);
+  add(flat(400, 4.0), '#55585b', [0, 0.008, 4.0]);
+  add(flat(400, 0.12), '#e8e8e2', [0, 0.012, 2.25]);
+  add(flat(400, 0.12), '#e8e8e2', [0, 0.012, 5.75]);
+  add(flat(0.6, D), '#bcb8ad', [W + 0.3, 0.005, -D / 2]);
+  add(flat(0.6, D - 3.8), '#bcb8ad', [-0.3, 0.005, -D / 2 - 1.9]);
+  const nb = (x0, x1, z0, z1, h, color) => {
+    const m = add(new THREE.BoxGeometry(x1 - x0, h, z0 - z1), color, [(x0 + x1) / 2, h / 2, (z0 + z1) / 2], 0.9);
+    m.castShadow = true;
+  };
+  nb(-11, -4.6, -0.5, -10.5, 6.6, '#d8d3ca');
+  nb(-2, 8, -14.5, -22, 6.2, '#cfd3d4');
+  const shrubMat = new THREE.MeshStandardMaterial({ color: '#4d7a3b', roughness: 0.95, flatShading: true });
+  const rng = mulberry32(3);
+  const spots = [[-0.45, 1.5], [-0.45, 0.9], [-0.5, 0.25], [W + 0.45, 1.6], [W + 0.45, 1.0], [W + 0.4, -1.0], [W + 0.4, -1.7], [W + 0.4, -5.2], [W + 0.4, -6.0]];
+  for (const [x, z] of spots) for (let j = 0; j < 3; j++) {
+    const r = 0.22 + rng() * 0.16;
+    const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 1), shrubMat);
+    m.position.set(x + (rng() - 0.5) * 0.25, r * 0.75, z + (rng() - 0.5) * 0.35); m.scale.y = 0.8;
+    m.castShadow = true; m.receiveShadow = true; scene.add(m);
+  }
+}
+
+let houseGeos = null;
+const viewers = {};
+let syncing = false;
+
+class Viewer {
+  constructor(el, side) {
+    this.el = el; this.side = side;
+    const r = this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    r.outputColorSpace = THREE.SRGBColorSpace;
+    r.toneMapping = THREE.NeutralToneMapping; r.toneMappingExposure = 1.0;
+    r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+    el.prepend(r.domElement);
+    const sc = this.scene = new THREE.Scene();
+    sc.background = SKY;
+    const pm = new THREE.PMREMGenerator(r);
+    sc.environment = pm.fromEquirectangular(SKY).texture; sc.environmentIntensity = 0.55; pm.dispose();
+    sc.fog = new THREE.Fog('#dfe7ec', 70, 230);
+    const sun = new THREE.DirectionalLight('#fff4e4', 2.3);
+    sun.position.set(W / 2 + 11, 17, 8); sun.target.position.set(W / 2, 0, -D / 2 + 1);
+    sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+    Object.assign(sun.shadow.camera, { left: -13, right: 13, top: 13, bottom: -13, near: 1, far: 60 });
+    sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+    sc.add(sun, sun.target, new THREE.HemisphereLight('#d4e3f5', '#958f82', 0.45));
+    buildSite(sc);
+    this.cam = new THREE.PerspectiveCamera(36, 1, 0.1, 600);
+    const c = this.controls = new OrbitControls(this.cam, r.domElement);
+    c.enableDamping = true; c.dampingFactor = 0.09; c.maxPolarAngle = Math.PI * 0.497; c.minDistance = 4; c.maxDistance = 75;
+    c.addEventListener('change', () => { this.dirty = true; this.onCam(); });
+    this.mats = makeMats();
+    this.house = new THREE.Group(); sc.add(this.house);
+    this.dirty = true;
+    new ResizeObserver(() => this.resize()).observe(el);
+    let down = null;
+    r.domElement.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY, performance.now()]; });
+    r.domElement.addEventListener('pointerup', e => {
+      if (!down) return; const [x, y, t] = down; down = null;
+      if (Math.hypot(e.clientX - x, e.clientY - y) < 6 && performance.now() - t < 600) this.pick(e);
+    });
+  }
+  resize() {
+    const w = this.el.clientWidth, h = this.el.clientHeight; if (!w || !h) return;
+    this.renderer.setSize(w, h, false); this.cam.aspect = w / h; this.cam.updateProjectionMatrix(); this.dirty = true;
+  }
+  setView(name) {
+    const vw = VIEWS[name]; const t = v(...vw.tgt), p = v(...vw.pos);
+    const k = Math.max(1, Math.min(2.6, vw.need / Math.max(0.2, this.cam.aspect)));
+    this.cam.position.copy(t.clone().add(p.sub(t).multiplyScalar(k)));
+    this.controls.target.copy(t); this.controls.update(); this.dirty = true;
+  }
+  onCam() {
+    if (syncing || S.mode !== 'compare' || !S.sync) return;
+    const other = viewers[this.side === 'A' ? 'B' : 'A']; if (!other) return;
+    syncing = true;
+    other.cam.position.copy(this.cam.position); other.controls.target.copy(this.controls.target);
+    other.controls.update(); other.dirty = true;
+    syncing = false;
+  }
+  setHouse(geos) {
+    this.house.clear();
+    for (const k in geos) {
+      const m = new THREE.Mesh(geos[k], this.mats[k]);
+      m.castShadow = k !== 'glass'; m.receiveShadow = true; m.userData.key = k; this.house.add(m);
+    }
+    this.dirty = true;
+  }
+  apply(st) {
+    const M = this.mats;
+    for (const z of ['f1', 'f2', 'f3', 'garage']) {
+      const p = wallById(st[z]), mat = M[z];
+      mat.map = colorTex(p); mat.normalMap = normTex(p.pat); mat.color.set('#ffffff');
+      mat.metalness = p.metal || 0; mat.roughness = p.metal ? 0.5 : 0.88; mat.needsUpdate = true;
+    }
+    for (const m of this.house.children) {
+      if (m.userData.key === 'trim2') m.visible = st.f1 !== st.f2;
+      if (m.userData.key === 'trim3') m.visible = st.f2 !== st.f3;
+    }
+    M.sash.color.set(opt('sash', st.sash).hex);
+    const sof = opt('soffit', st.soffit);
+    if (sof.wood) { M.soffit.map = colorTex(wallById(sof.wood)); M.soffit.normalMap = normTex('wood'); M.soffit.color.set('#ffffff'); }
+    else { M.soffit.map = null; M.soffit.normalMap = null; M.soffit.color.set(sof.hex); }
+    M.soffit.needsUpdate = true;
+    const rf = opt('roof', st.roof);
+    M.roof.map = roofTex(); M.roof.normalMap = normTex('roof'); M.roof.color.set(rf.hex); M.roof.needsUpdate = true;
+    M.fascia.color.set(rf.hex);
+    const dr = opt('door', st.door);
+    if (dr.wood) { M.door.map = colorTex(wallById(dr.wood)); M.door.color.set('#ffffff'); }
+    else { M.door.map = null; M.door.color.set(dr.hex); }
+    M.door.normalMap = normTex('wood'); M.door.needsUpdate = true;
+    this.dirty = true;
+  }
+  pick(e) {
+    const rc = this.el.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((e.clientX - rc.left) / rc.width) * 2 - 1, -((e.clientY - rc.top) / rc.height) * 2 + 1);
+    const ray = new THREE.Raycaster(); ray.setFromCamera(ndc, this.cam);
+    const hit = ray.intersectObjects(this.house.children, false)[0];
+    if (S.mode === 'compare' && S.edit !== this.side) { S.edit = this.side; refreshUI(); }
+    if (!hit) return;
+    const k = hit.object.userData.key;
+    const map = { f1: 'f1', f2: 'f2', f3: 'f3', garage: 'garage', sash: 'sash', trim2: 'sash', trim3: 'sash', glass: 'sash', soffit: 'soffit', roof: 'roof', fascia: 'roof', door: 'door', handle: 'door' };
+    const target = map[k]; if (!target) return;
+    if (ZONES.some(z => z[0] === target)) { S.zone = target; refreshUI(); focusSection(document.getElementById('secWall')); }
+    else focusSection(document.querySelector(`.colors[data-cat="${target}"]`).closest('.sec'));
+    save();
+  }
+  render() { this.renderer.render(this.scene, this.cam); this.dirty = false; }
+}
+function focusSection(sec) {
+  if (!sec) return;
+  sec.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+  sec.animate?.([{ background: 'var(--accent-soft)' }, { background: 'transparent' }], { duration: 900 });
+}
+function loop() {
+  requestAnimationFrame(loop);
+  for (const s of ['A', 'B']) {
+    const vw = viewers[s]; if (!vw || vw.el.parentElement.hidden) continue;
+    const moved = vw.controls.update();
+    if (vw.dirty || moved) vw.render();
+  }
+}
+
+/* =========================================================
+   パネル UI
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const cur = () => S[S.edit];
+function applyAll() { for (const s of ['A', 'B']) viewers[s]?.apply(S[s]); renderLegend('A'); renderLegend('B'); }
+function setState(fn) { fn(cur()); viewers[S.edit]?.apply(cur()); renderLegend(S.edit); refreshUI(); save(); }
+
+function renderZones() {
+  const st = cur();
+  $('#zones').innerHTML = ZONES.map(([k, label]) => {
+    const p = wallById(st[k]);
+    return `<button type="button" class="zone" data-zone="${k}" aria-pressed="${S.zone === k}">
+      <span class="zl">${label}</span><img alt="" src="${thumb(p).url}">
+      <span class="zn">${p.code ? `<span class="code">${esc(p.code)}</span>` : ''}${esc(p.name)}</span></button>`;
+  }).join('');
+}
+function renderFilters() {
+  const keys = ['all', ...Object.keys(PATTERNS)]; if (userProducts.length) keys.push('user');
+  if (!keys.includes(S.filter)) S.filter = 'all';
+  $('#filters').innerHTML = keys.map(k => `<button type="button" data-filter="${k}" aria-pressed="${S.filter === k}">${k === 'all' ? 'すべて' : k === 'user' ? '登録品' : PATTERNS[k]}</button>`).join('');
+}
+function renderGrid() {
+  const sel = cur()[S.zone];
+  const list = allWalls().filter(p => S.filter === 'all' || (S.filter === 'user' ? p.user : p.pat === S.filter));
+  $('#wallGrid').innerHTML = list.map(p => `<button type="button" class="sw-btn" data-prod="${esc(p.id)}" aria-pressed="${p.id === sel}" title="${esc(prodLabel(p))}">
+      ${p.doc ? '<span class="badge">資料記載</span>' : p.user ? '<span class="badge">登録品</span>' : ''}
+      <img alt="" src="${thumb(p).url}">${p.code ? `<span class="cd">${esc(p.code)}</span>` : ''}<span class="nm">${esc(p.name)}</span></button>`).join('');
+}
+function chipStyle(o) { return o.wood ? `background-image:url(${thumb(wallById(o.wood)).url})` : `background:${o.hex}`; }
+function renderColors() {
+  for (const box of document.querySelectorAll('.colors')) {
+    const cat = box.dataset.cat, val = cur()[cat], isCustom = typeof val === 'string' && val.startsWith('#');
+    box.innerHTML = OPTIONS[cat].map(o => `<button type="button" class="chip" data-cat="${cat}" data-val="${o.id}" aria-pressed="${val === o.id}" title="${esc(o.name)}" aria-label="${esc(o.name)}" style="${chipStyle(o)}"></button>`).join('')
+      + `<label class="chip custom" title="好きな色を指定" aria-pressed="${isCustom}" ${isCustom ? `style="background:${val}"` : ''}><input type="color" id="custom-${cat}" data-cat="${cat}" value="${isCustom ? val : '#888888'}" aria-label="${CAT_LABEL[cat]}の色を指定"></label>`;
+    $('#cur-' + cat).textContent = opt(cat, val).name;
+  }
+}
+function renderLegend(side) {
+  const st = S[side], el = $('#leg' + side); if (!el) return;
+  const rows = ZONES.map(([k, l]) => { const p = wallById(st[k]); return `<div class="row"><span class="k">${l}</span><span class="sw" style="background-image:url(${thumb(p).url})"></span><span class="v">${p.code ? `<span class="code">${esc(p.code)}</span>` : ''}${esc(p.name)}</span></div>`; });
+  for (const cat of ['sash', 'soffit', 'roof']) { const o = opt(cat, st[cat]); rows.push(`<div class="row"><span class="k">${CAT_LABEL[cat]}</span><span class="sw" style="${chipStyle(o)}"></span><span class="v">${esc(o.name)}</span></div>`); }
+  el.innerHTML = rows.join('');
+}
+function renderUserList() {
+  $('#userList').innerHTML = userProducts.map(p => `<div><span>${esc(prodLabel(p))}</span><button type="button" data-del="${esc(p.id)}">削除</button></div>`).join('');
+}
+function refreshUI(full = true) {
+  const cmp = S.mode === 'compare';
+  for (const b of document.querySelectorAll('#modeSeg button')) b.setAttribute('aria-pressed', b.dataset.mode === S.mode);
+  for (const b of document.querySelectorAll('#roofSeg button')) b.setAttribute('aria-pressed', b.dataset.roof === S.roofType);
+  for (const b of document.querySelectorAll('[data-edit]')) b.setAttribute('aria-pressed', b.dataset.edit === S.edit);
+  $('#editTarget').classList.toggle('show', cmp);
+  $('#syncWrap').hidden = !cmp;
+  $('#sync').checked = S.sync;
+  $('#legendChk').checked = S.legend;
+  $('#stage').classList.toggle('compare', cmp);
+  $('#stage').classList.toggle('no-legend', !S.legend);
+  $('#pB').hidden = !cmp;
+  $('#vA').classList.toggle('editing', !cmp || S.edit === 'A');
+  $('#vB').classList.toggle('editing', cmp && S.edit === 'B');
+  const other = S.edit === 'A' ? 'B' : 'A';
+  $('#copyBtn').textContent = `${S.edit} の内容を ${other} にコピー`;
+  if (!full) return;
+  renderZones(); renderFilters(); renderGrid(); renderColors(); renderUserList();
+}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function bindUI() {
+  $('#modeSeg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    S.mode = b.dataset.mode; if (S.mode === 'single') S.edit = 'A';
+    refreshUI(); save();
+    requestAnimationFrame(() => { viewers.A.resize(); viewers.B.resize(); if (S.mode === 'compare') syncFrom(viewers.A); });
+  });
+  document.querySelector('#editTarget').addEventListener('click', e => {
+    const t = e.target.closest('[data-edit]'); if (t) { S.edit = t.dataset.edit; refreshUI(); save(); }
+  });
+  $('#copyBtn').addEventListener('click', () => {
+    const other = S.edit === 'A' ? 'B' : 'A'; S[other] = structuredClone(S[S.edit]);
+    viewers[other].apply(S[other]); renderLegend(other); save();
+  });
+  $('#views').addEventListener('click', e => {
+    const b = e.target.closest('[data-view]'); if (!b) return;
+    for (const s of ['A', 'B']) viewers[s].setView(b.dataset.view);
+  });
+  $('#sync').addEventListener('change', e => { S.sync = e.target.checked; if (S.sync) syncFrom(viewers[S.edit]); save(); });
+  $('#legendChk').addEventListener('change', e => { S.legend = e.target.checked; refreshUI(); save(); });
+  $('#zones').addEventListener('click', e => { const b = e.target.closest('[data-zone]'); if (b) { S.zone = b.dataset.zone; refreshUI(); save(); } });
+  $('#filters').addEventListener('click', e => { const b = e.target.closest('[data-filter]'); if (b) { S.filter = b.dataset.filter; renderFilters(); renderGrid(); save(); } });
+  $('#wallGrid').addEventListener('click', e => { const b = e.target.closest('[data-prod]'); if (b) setState(st => { st[S.zone] = b.dataset.prod; }); });
+  $('#applyFloors').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = p; }));
+  $('#applyAll').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = st.garage = p; }));
+  $('#panel').addEventListener('click', e => { const c = e.target.closest('button.chip'); if (c) setState(st => { st[c.dataset.cat] = c.dataset.val; }); });
+  $('#panel').addEventListener('input', e => {
+    const t = e.target; if (t.type !== 'color' || !t.dataset.cat) return;
+    const cat = t.dataset.cat; cur()[cat] = t.value; viewers[S.edit].apply(cur()); renderLegend(S.edit);
+    t.parentElement.style.background = t.value; $('#cur-' + cat).textContent = opt(cat, t.value).name; save();
+  });
+  $('#panel').addEventListener('change', e => { if (e.target.type === 'color' && e.target.dataset.cat) renderColors(); });
+  $('#roofSeg').addEventListener('click', e => {
+    const b = e.target.closest('[data-roof]'); if (!b || b.dataset.roof === S.roofType) return;
+    S.roofType = b.dataset.roof; houseGeos = buildHouse(S.roofType);
+    for (const s of ['A', 'B']) { viewers[s].setHouse(houseGeos); viewers[s].apply(S[s]); }
+    refreshUI(); save();
+  });
+  $('#newPat').innerHTML = Object.entries(PATTERNS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('');
+  $('#addForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const code = $('#newCode').value.trim(), name = $('#newName').value.trim() || '登録外壁材';
+    const c1 = $('#newC1').value, c2 = $('#newC2').value, mix = $('#newMix').checked;
+    const p = { id: 'u' + Date.now().toString(36), code, name, pat: $('#newPat').value, colors: mix ? [c1, c2] : [c1], v: 0.14, user: true, joint: $('#newPat').value === 'tile' ? '#bdb8ae' : undefined };
+    userProducts.push(p); S.filter = 'user';
+    setState(st => { st[S.zone] = p.id; });
+    $('#newCode').value = ''; $('#newName').value = '';
+  });
+  $('#userList').addEventListener('click', e => {
+    const b = e.target.closest('[data-del]'); if (!b) return;
+    const id = b.dataset.del; userProducts = userProducts.filter(p => p.id !== id);
+    for (const s of ['A', 'B']) for (const [z] of ZONES) if (S[s][z] === id) S[s][z] = DEFAULT[s][z];
+    applyAll(); refreshUI(); save();
+  });
+  $('#snapBtn').addEventListener('click', snapshot);
+  $('#closeModal').addEventListener('click', () => { $('#modal').hidden = true; });
+  $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') $('#modal').hidden = true; });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#modal').hidden = true; });
+}
+function syncFrom(vw) {
+  const other = viewers[vw.side === 'A' ? 'B' : 'A'];
+  other.cam.position.copy(vw.cam.position); other.controls.target.copy(vw.controls.target); other.controls.update(); other.dirty = true;
+}
+
+/* =========================================================
+   画像化
+   ========================================================= */
+function snapshot() {
+  const sides = S.mode === 'compare' ? ['A', 'B'] : ['A'];
+  const imgs = sides.map(s => { viewers[s].render(); return viewers[s].renderer.domElement; });
+  const sc = Math.min(window.devicePixelRatio || 1, 2);
+  const gap = Math.round(14 * sc), head = Math.round(54 * sc), lineH = Math.round(22 * sc);
+  const legH = lineH * 7 + gap * 2;
+  const iw = imgs[0].width, ih = imgs[0].height;
+  const c = mkCanvas(iw * imgs.length + gap * (imgs.length + 1), head + ih + legH + gap), g = c.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+  g.fillStyle = '#1b2023'; g.font = `700 ${Math.round(17 * sc)}px "Zen Kaku Gothic New", sans-serif`; g.textBaseline = 'middle';
+  g.fillText('高藤邸 外壁カラーシミュレーション（プランNo.2）', gap, head / 2);
+  imgs.forEach((im, i) => {
+    const x = gap + i * (iw + gap), side = sides[i], st = S[side];
+    g.drawImage(im, x, head, iw, ih);
+    if (sides.length > 1) {
+      g.fillStyle = side === 'A' ? '#275c7c' : '#9a4f24'; g.beginPath(); g.arc(x + 22 * sc, head + 22 * sc, 13 * sc, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#fff'; g.font = `700 ${Math.round(14 * sc)}px sans-serif`; g.textAlign = 'center'; g.fillText(side, x + 22 * sc, head + 22 * sc); g.textAlign = 'left';
+    }
+    let y = head + ih + gap + lineH / 2;
+    const rows = ZONES.map(([k, l]) => { const p = wallById(st[k]); return [l, prodLabel(p), thumb(p).canvas, null]; });
+    for (const cat of ['sash', 'soffit', 'roof']) { const o = opt(cat, st[cat]); rows.push([CAT_LABEL[cat], o.name, o.wood ? thumb(wallById(o.wood)).canvas : null, o.hex]); }
+    for (const [l, txt, tc, hex] of rows) {
+      g.fillStyle = '#5f696d'; g.font = `500 ${Math.round(12 * sc)}px "Zen Kaku Gothic New", sans-serif`; g.fillText(l, x, y);
+      const sx = x + 64 * sc, sw = 26 * sc, sh = 16 * sc;
+      if (tc) g.drawImage(tc, 0, 0, 128, 80, sx, y - sh / 2, sw, sh); else { g.fillStyle = hex; g.fillRect(sx, y - sh / 2, sw, sh); }
+      g.strokeStyle = 'rgba(0,0,0,.2)'; g.lineWidth = 1; g.strokeRect(sx, y - sh / 2, sw, sh);
+      g.fillStyle = '#1b2023'; g.font = `500 ${Math.round(12.5 * sc)}px "Zen Kaku Gothic New", sans-serif`;
+      let t = txt; const maxW = iw - 100 * sc; while (g.measureText(t).width > maxW && t.length > 2) t = t.slice(0, -2) + '…';
+      g.fillText(t, sx + sw + 8 * sc, y); y += lineH;
+    }
+  });
+  const url = c.toDataURL('image/png');
+  $('#snapImg').src = url; $('#dlLink').href = url; $('#modal').hidden = false;
+}
+
+/* =========================================================
+   起動
+   ========================================================= */
+viewers.A = new Viewer($('#vA'), 'A');
+viewers.B = new Viewer($('#vB'), 'B');
+bindUI();
+refreshUI(false);
+viewers.A.resize(); viewers.B.resize();
+viewers.A.setView('persp'); viewers.B.setView('persp');
+loop();
+setTimeout(() => {
+  houseGeos = buildHouse(S.roofType);
+  for (const s of ['A', 'B']) viewers[s].setHouse(houseGeos);
+  applyAll(); refreshUI();
+  $('#loadA').remove(); $('#loadB').remove();
+}, 30);
+</script>
+</body>
+</html>
