@@ -149,6 +149,11 @@ button{cursor:pointer}
 .filters.fam button{display:inline-flex;align-items:center;gap:4px}
 .filters.fam i{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
 .count{font-size:11.5px;color:var(--muted)}
+.doorGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:10px 8px}
+.door-btn{display:grid;gap:3px;justify-items:center;border:0;background:transparent;padding:0;font-family:var(--font-mono);font-size:10.5px;color:var(--muted)}
+.door-btn span{display:block;width:44px;height:107px;border-radius:3px;background-repeat:no-repeat;box-shadow:0 0 0 1px var(--line)}
+.door-btn[aria-pressed="true"]{color:var(--ink);font-weight:500}
+.door-btn[aria-pressed="true"] span{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
 .detail{display:grid;gap:6px;padding:10px;border-radius:10px;background:var(--surface-2);font-size:12.5px;line-height:1.5}
 .d-main{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:center}
 .d-sw{width:64px;height:64px;border-radius:6px;background-repeat:no-repeat;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
@@ -346,7 +351,10 @@ details.src a{color:var(--accent);word-break:break-all}
       </section>
       <section class="sec">
         <div class="sec-h"><h2>玄関ドア</h2><span class="cur" id="cur-door"></span></div>
-        <div class="colors" data-cat="door"></div>
+        <div class="filters" id="doorFilters" aria-label="ドアのテイスト"></div>
+        <div class="doorGrid" id="doorGrid"></div>
+        <p class="note">YKK AP 断熱玄関ドア ヴェナートD30（67デザイン）から選べます。品番末尾「T」は通風タイプです。扉の色・柄はカタログの写真です。</p>
+        <details class="add"><summary>デザインを使わず色だけで表示</summary><div class="colors" data-cat="door" style="margin-top:10px"></div></details>
       </section>
       <section class="sec">
         <div class="sec-h"><h2>門柱</h2><span class="cur" id="cur-gate"></span></div>
@@ -377,7 +385,7 @@ details.src a{color:var(--accent);word-break:break-all}
     <ol class="steps">
       <li><b>塗る場所を選ぶ</b>「外壁」の <em>3階・バルコニー内・2階・1階・ガレージ</em> から1つタップ。パースの壁を直接タップしても選べます。「バルコニー内」は3階インナーバルコニーの奥の壁と左右の壁です。</li>
       <li><b>外壁材を選ぶ</b>下の一覧から材をタップ。検索欄に<em>品番や色名</em>（例：AH5935、シルク）を入れるか、<em>シリーズ</em>と<em>色の系統</em>で絞り込めます。全部の階を同じ材にするときは「この材を1〜3階すべてに」（バルコニー内も含みます）。縦張りできる柄は「縦張りで表示する」で向きを変えられます。</li>
-      <li><b>窓枠・軒天・屋根・ドア・門柱</b>色の丸をタップ。門柱は「門柱を表示する」で出し入れできます。虹色の丸を押すと好きな色を指定できます。屋根は片流れ／寄棟を切り替えられます。</li>
+      <li><b>窓枠・軒天・屋根・ドア・門柱</b>色の丸をタップ。玄関ドアはYKK AP ヴェナートD30の67デザインから選べます（テイストで絞り込み可）。門柱は「門柱を表示する」で出し入れできます。虹色の丸を押すと好きな色を指定できます。屋根は片流れ／寄棟を切り替えられます。</li>
       <li><b>2案を比べる</b>「2画面で比較」を押すと A・B が並びます。「編集中」でどちらを変えるか選び、「A の内容を B にコピー」で叩き台を作ると早いです。</li>
       <li><b>見る角度を変える</b>指1本で回転、2本指でズーム・移動。視点ボタンで正面・側面・鳥瞰に切り替え。2画面は視点が連動します。</li>
       <li><b>画像にして残す</b>「画像にする」で材料の一覧付き画像を作成。スマホは画像を長押しして保存します。</li>
@@ -484,6 +492,16 @@ const OPTIONS = {
 };
 const ZONES = [['f3', '3階'], ['balc', 'バルコニー内'], ['f2', '2階'], ['f1', '1階'], ['garage', 'ガレージ']];
 const ZONE_KEYS = ZONES.map(z => z[0]);
+const DOOR_SIZE = { u0: 1.0, u1: 1.85, y0: 0.17, y1: 2.27, depth: 0.04, w: 0.85, h: 2.1 };
+// YKK AP 断熱玄関ドア ヴェナートD30 デザイン一覧（ご提供カタログ P.8〜9）。画像は同カタログの扉写真。
+const DOOR_TASTES = { N: 'ナチュラル', F: 'シンプル', C: 'シック', E: 'エレガント' };
+const DOORS = ('N05T N06T N07T N11T N17T N01N N02N N03N N04N N05N N06N N07N N08N N09N N10N N11N N12N N13N N14N N15N N16N N17N N18N '
+  + 'F03T F05T F06T F11T F01N F02N F03N F04N F05N F06N F07N F08N F10N F11N F12N F13N '
+  + 'C04T C07T C08T C09T C01N C02N C03N C04N C05N C06N C07N C08N C09N C10N '
+  + 'E09T E01N E02N E03N E04N E05N E07N E08N E09N E10N E11N E12N E13N E14N').split(' ').map((id, i) => ({ id, i, taste: id[0], vent: id.endsWith('T') }));
+const doorById = id => DOORS.find(d => d.id === id);
+const doorLabel = d => `YKK AP ヴェナートD30 ${d.id}（${DOOR_TASTES[d.taste]}${d.vent ? '・通風' : ''}）`;
+const doorSprite = (d, w) => `background-image:url(ykk/doors.jpg);background-size:${w * 12}px auto;background-position:-${(d.i % 12) * w}px -${Math.floor(d.i / 12) * w * 216 / 89}px`;
 const CAT_LABEL = { sash: 'サッシ', soffit: '軒天', roof: '屋根', door: 'ドア', gate: '門柱' };
 
 /* =========================================================
@@ -732,6 +750,18 @@ function catalogTex(p, vert) {
     return { map, normal };
   }));
 }
+let DOOR_SHEET = null;
+const doorSheet = () => DOOR_SHEET || (DOOR_SHEET = new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = 'ykk/doors.jpg'; }));
+const DOOR_TEX = {};
+function doorTex(d) {
+  return DOOR_TEX[d.id] || (DOOR_TEX[d.id] = doorSheet().then(img => {
+    const c = mkCanvas(89 * 2, 216 * 2), g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+    g.drawImage(img, (d.i % 12) * 89, Math.floor(d.i / 12) * 216, 89, 216, 0, 0, 178, 432);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    t.repeat.set(1 / DOOR_SIZE.w, 1 / DOOR_SIZE.h); t.offset.set(-DOOR_SIZE.u0 / DOOR_SIZE.w, -DOOR_SIZE.y0 / DOOR_SIZE.h);
+    return t;
+  }));
+}
 let THUMB_SHEET = null;
 const thumbSheet = () => THUMB_SHEET || (THUMB_SHEET = loadImg('thumbs.jpg'));
 function thumbIndex(p) { return WALLS.indexOf(p); }
@@ -742,6 +772,7 @@ function swatchStyle(p, size) {
   return `background-image:url(${ASSET_DIR}thumbs.jpg);background-size:${size * 16}px auto;background-position:-${(i % 16) * size}px -${Math.floor(i / 16) * size}px`;
 }
 async function drawSwatch(g, p, dx, dy, dw, dh) {
+  if (p.door) { try { const im = await doorSheet(), d = p.door; g.drawImage(im, (d.i % 12) * 89, Math.floor(d.i / 12) * 216 + 70, 89, 55, dx, dy, dw, dh); } catch (e) { g.fillStyle = '#8a7a68'; g.fillRect(dx, dy, dw, dh); } return; }
   const i = thumbIndex(p);
   if (i < 0) { g.drawImage(thumb(p).canvas, 0, 0, 128, 80, dx, dy, dw, dh); return; }
   try { const im = await thumbSheet(); g.drawImage(im, (i % 16) * 96, Math.floor(i / 16) * 96 + 24, 96, 48, dx, dy, dw, dh); }
@@ -943,7 +974,7 @@ function buildHouse(roofType) {
   // インナーガレージ
   const G = GAR;
   const GBK = { o: v(0, 0, G.z1), U: X, N: Z };
-  const door = { u0: 1.0, u1: 1.85, y0: 0.17, y1: 2.27, depth: 0.04 };
+  const door = DOOR_SIZE;
   wallRegion(B, GBK, G.x0, G.x1, 0, G.top, [door], 'garage');
   reveals(B, GBK, door, { fixed: 'garage', sill: 'garage' });
   B('door').quad(P(GBK, door.u0, door.y0, 0.04), P(GBK, door.u1, door.y0, 0.04), P(GBK, door.u1, door.y1, 0.04), P(GBK, door.u0, door.y1, 0.04), Z, X, Y, O0);
@@ -979,9 +1010,9 @@ function buildHouse(roofType) {
    ========================================================= */
 const STORE_KEY = 'kmew-facade-sim-v1';
 const DEFAULT = {
-  mode: 'single', edit: 'A', zone: 'f3', sync: true, roofType: 'mono', legend: true, filter: 'all', fam: 'all',
-  A: { vert: {}, balc: 'AH5935U', f3: 'AH5935U', f2: 'AH5935U', f1: 'AH5935U', garage: 'AH5933U', sash: 'black', soffit: 'wood-natural', roof: 'black', door: 'wood-natural', gate: 'black', gateOn: true },
-  B: { vert: {}, balc: 'NH5912', f3: 'AH5933U', f2: 'AH5935U', f1: 'AH5935U', garage: 'NH5912', sash: 'black', soffit: 'black', roof: 'black', door: 'black', gate: 'black', gateOn: true },
+  mode: 'single', edit: 'A', zone: 'f3', sync: true, roofType: 'mono', legend: true, filter: 'all', fam: 'all', doorTaste: 'all',
+  A: { vert: {}, balc: 'AH5935U', f3: 'AH5935U', f2: 'AH5935U', f1: 'AH5935U', garage: 'AH5933U', sash: 'black', soffit: 'wood-natural', roof: 'black', door: 'wood-natural', doorDesign: 'N07T', gate: 'black', gateOn: true },
+  B: { vert: {}, balc: 'NH5912', f3: 'AH5933U', f2: 'AH5935U', f1: 'AH5935U', garage: 'NH5912', sash: 'black', soffit: 'black', roof: 'black', door: 'black', doorDesign: 'F12N', gate: 'black', gateOn: true },
 };
 let userProducts = [];
 let S = structuredClone(DEFAULT);
@@ -1163,10 +1194,22 @@ class Viewer {
     const rf = opt('roof', st.roof);
     M.roof.map = roofTex(); M.roof.normalMap = normTex('roof'); M.roof.color.set(rf.hex); M.roof.needsUpdate = true;
     M.fascia.color.set(rf.hex);
-    const dr = opt('door', st.door);
-    if (dr.wood) { M.door.map = colorTex(wallById(dr.wood)); M.door.color.set('#ffffff'); }
-    else { M.door.map = null; M.door.color.set(dr.hex); }
-    M.door.normalMap = normTex('wood'); M.door.needsUpdate = true;
+    const dd = st.doorDesign && doorById(st.doorDesign), dr = opt('door', st.door);
+    M.door.userData.want = dd ? dd.id : '';
+    for (const m of this.house.children) if (m.userData.key === 'handle') m.visible = !dd;
+    if (dd && CAN_TEXTURE) {
+      if (M.door.userData.have !== dd.id) { M.door.map = null; M.door.normalMap = null; M.door.color.set('#8a7a68'); M.door.needsUpdate = true; }
+      doorTex(dd).then(t => {
+        if (M.door.userData.want !== dd.id) return;
+        M.door.map = t; M.door.normalMap = null; M.door.color.set('#ffffff'); M.door.roughness = 0.6; M.door.userData.have = dd.id;
+        M.door.needsUpdate = true; this.dirty = true;
+      }).catch(() => {});
+    } else {
+      M.door.userData.have = '';
+      if (dr.wood) { M.door.map = colorTex(wallById(dr.wood)); M.door.color.set('#ffffff'); }
+      else { M.door.map = null; M.door.color.set(dr.hex); }
+      M.door.normalMap = normTex('wood'); M.door.needsUpdate = true;
+    }
     const gt = opt('gate', st.gate);
     if (gt.wood) { M.gate.map = colorTex(wallById(gt.wood)); M.gate.normalMap = normTex('wood'); M.gate.color.set('#ffffff'); }
     else { M.gate.map = null; M.gate.normalMap = null; M.gate.color.set(gt.hex); }
@@ -1266,8 +1309,19 @@ function renderColors() {
 function renderLegend(side) {
   const st = S[side], el = $('#leg' + side); if (!el) return;
   const rows = ZONES.map(([k, l]) => { const p = wallById(st[k]); return `<div class="row"><span class="k">${l}${st.vert && st.vert[k] && /縦/.test(p.orient || '') ? '（縦）' : ''}</span><span class="sw" style="${swatchStyle(p, 22)}"></span><span class="v">${p.code ? `<span class="code">${esc(p.code)}</span>` : ''}${esc(p.name)}</span></div>`; });
+  const ld = st.doorDesign && doorById(st.doorDesign);
+  rows.push(ld ? `<div class="row"><span class="k">玄関ドア</span><span class="sw" style="${doorSprite(ld, 22)};background-size:${22 * 12}px auto;background-position:-${(ld.i % 12) * 22}px -${Math.floor(ld.i / 12) * 22 * 216 / 89 + 20}px"></span><span class="v">${esc(doorLabel(ld))}</span></div>` : `<div class="row"><span class="k">玄関ドア</span><span class="sw" style="${chipStyle(opt('door', st.door))}"></span><span class="v">${esc(opt('door', st.door).name)}</span></div>`);
   for (const cat of ['sash', 'soffit', 'roof', ...(st.gateOn !== false ? ['gate'] : [])]) { const o = opt(cat, st[cat]); rows.push(`<div class="row"><span class="k">${CAT_LABEL[cat]}</span><span class="sw" style="${chipStyle(o)}"></span><span class="v">${esc(o.name)}</span></div>`); }
   el.innerHTML = rows.join('');
+}
+function renderDoors() {
+  const st = cur(), sel = st.doorDesign || '';
+  if (!(S.doorTaste === 'all' || DOOR_TASTES[S.doorTaste])) S.doorTaste = 'all';
+  $('#doorFilters').innerHTML = ['all', ...Object.keys(DOOR_TASTES)].map(k => `<button type="button" data-taste="${k}" aria-pressed="${S.doorTaste === k}">${k === 'all' ? 'すべて' : DOOR_TASTES[k]}</button>`).join('');
+  $('#doorGrid').innerHTML = DOORS.filter(d => S.doorTaste === 'all' || d.taste === S.doorTaste)
+    .map(d => `<button type="button" class="door-btn" data-door="${d.id}" aria-pressed="${d.id === sel}" title="${esc(doorLabel(d))}"><span style="${doorSprite(d, 44)}"></span>${d.id}</button>`).join('');
+  const dd = sel && doorById(sel);
+  $('#cur-door').textContent = dd ? `ヴェナートD30 ${dd.id}` : opt('door', st.door).name;
 }
 function renderUserList() {
   $('#userList').innerHTML = userProducts.map(p => `<div><span>${esc(prodLabel(p))}</span><button type="button" data-del="${esc(p.id)}">削除</button></div>`).join('');
@@ -1290,7 +1344,7 @@ function refreshUI(full = true) {
   const other = S.edit === 'A' ? 'B' : 'A';
   $('#copyBtn').textContent = `${S.edit} の内容を ${other} にコピー`;
   if (!full) return;
-  renderZones(); renderDetail(); renderFilters(); renderGrid(); renderColors(); renderUserList();
+  renderZones(); renderDetail(); renderFilters(); renderGrid(); renderColors(); renderDoors(); renderUserList();
 }
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -1325,10 +1379,12 @@ function bindUI() {
   $('#wallGrid').addEventListener('click', e => { const b = e.target.closest('[data-prod]'); if (b) setState(st => { st[S.zone] = b.dataset.prod; }); });
   $('#applyFloors').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = st.balc = p; }));
   $('#applyAll').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = st.balc = st.garage = p; }));
-  $('#panel').addEventListener('click', e => { const c = e.target.closest('button.chip'); if (c) setState(st => { st[c.dataset.cat] = c.dataset.val; }); });
+  $('#panel').addEventListener('click', e => { const c = e.target.closest('button.chip'); if (c) setState(st => { st[c.dataset.cat] = c.dataset.val; if (c.dataset.cat === 'door') st.doorDesign = null; }); });
+  $('#doorGrid').addEventListener('click', e => { const b = e.target.closest('[data-door]'); if (b) setState(st => { st.doorDesign = b.dataset.door; }); });
+  $('#doorFilters').addEventListener('click', e => { const b = e.target.closest('[data-taste]'); if (b) { S.doorTaste = b.dataset.taste; renderDoors(); save(); } });
   $('#panel').addEventListener('input', e => {
     const t = e.target; if (t.type !== 'color' || !t.dataset.cat) return;
-    const cat = t.dataset.cat; cur()[cat] = t.value; viewers[S.edit].apply(cur()); renderLegend(S.edit);
+    const cat = t.dataset.cat; cur()[cat] = t.value; if (cat === 'door') cur().doorDesign = null; viewers[S.edit].apply(cur()); renderLegend(S.edit);
     t.parentElement.style.background = t.value; $('#cur-' + cat).textContent = opt(cat, t.value).name; save();
   });
   $('#panel').addEventListener('change', e => { if (e.target.type === 'color' && e.target.dataset.cat) renderColors(); });
@@ -1379,7 +1435,7 @@ async function snapshot() {
   });
   const sc = Math.min(window.devicePixelRatio || 1, 2);
   const gap = Math.round(14 * sc), head = Math.round(54 * sc), lineH = Math.round(22 * sc);
-  const legH = lineH * (ZONES.length + 4) + gap * 2;
+  const legH = lineH * (ZONES.length + 5) + gap * 2;
   const iw = imgs[0].width, ih = imgs[0].height;
   const c = mkCanvas(iw * imgs.length + gap * (imgs.length + 1), head + ih + legH + gap), g = c.getContext('2d');
   g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
@@ -1395,6 +1451,7 @@ async function snapshot() {
     }
     let y = head + ih + gap + lineH / 2;
     const rows = ZONES.map(([k, l]) => { const p = wallById(st[k]); return [l, prodLabel(p) + (p.price ? `（${p.price.toLocaleString()}円/枚）` : ''), p, null]; });
+    { const sd = st.doorDesign && doorById(st.doorDesign), o = opt('door', st.door); rows.push(['玄関ドア', sd ? doorLabel(sd) : o.name, sd ? { door: sd } : (o.wood ? wallById(o.wood) : null), o.hex]); }
     for (const cat of ['sash', 'soffit', 'roof', ...(st.gateOn !== false ? ['gate'] : [])]) { const o = opt(cat, st[cat]); rows.push([CAT_LABEL[cat], o.name, o.wood ? wallById(o.wood) : null, o.hex]); }
     for (const [l, txt, tp, hex] of rows) {
       g.fillStyle = '#5f696d'; g.font = `500 ${Math.round(12 * sc)}px "Zen Kaku Gothic New", sans-serif`; g.fillText(l, x, y);
