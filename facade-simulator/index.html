@@ -212,7 +212,40 @@ details.src summary{cursor:pointer;font-size:12.5px;font-weight:500}
 details.src ul{margin:8px 0;padding-left:18px;font-size:12px;display:grid;gap:3px}
 details.src a{color:var(--accent);word-break:break-all}
 
+.app-mode button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.in-stage-wrap{display:flex;flex-direction:column;min-width:0;min-height:0;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:12px}
+.in-select{border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:var(--surface);color:var(--ink);max-width:100%}
+.in-stage{position:relative;flex:1;min-height:0;border-radius:10px;overflow:hidden;background:var(--stage-bg)}
+.in-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.in-hint{position:absolute;right:10px;bottom:10px;font-size:11px;color:#22303a;background:rgba(255,255,255,.75);padding:3px 8px;border-radius:6px;pointer-events:none;z-index:1}
+.in-legend{position:absolute;left:10px;top:10px;max-width:calc(100% - 20px);font-size:12px;background:var(--ov-bg);color:var(--ov-ink);padding:6px 10px;border-radius:8px;display:grid;gap:2px;pointer-events:none;z-index:1}
+.in-legend span{font-size:11px;color:var(--ov-muted)}
+.in-tabs{display:flex;flex-wrap:wrap;gap:6px}
+#inBody{display:grid;gap:18px;align-content:start}
+.in-panel{gap:14px}
+.in-tabs button{flex:1 1 auto;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;font-size:13px;font-weight:500}
+.in-tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.in-sel{display:grid;gap:8px;padding:10px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent)}
+.in-sel-h{display:flex;align-items:center;gap:8px}
+.in-sel-h b{flex:1;min-width:0}
+.in-sel-h .tag{font-size:11px;padding:0 6px;border-radius:4px;background:var(--surface);color:var(--muted)}
+.in-sel-p{font-size:12.5px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.in-hset{display:inline-flex;gap:4px;flex-wrap:wrap}
+.in-sel-a{display:flex;gap:6px;flex-wrap:wrap}
+.btn.danger{color:#b3261e;border-color:#e2b4b0}
+.in-cat{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.in-add{display:grid;gap:1px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 9px;font-size:12.5px}
+.in-add:hover{border-color:var(--accent)}
+.in-add small{font-size:10.5px;color:var(--muted)}
+.in-list{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.in-list button{width:100%;display:flex;justify-content:space-between;gap:8px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:5px 8px;font-size:12px}
+.in-list small{color:var(--muted);font-size:11px}
+.chip.tx{background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.12) 0 2px,transparent 2px 9px)!important}
+
 @media (max-width: 900px){
+  .in-stage-wrap{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:8px;border-bottom:1px solid var(--line)}
+  .in-stage{height:46vh;min-height:280px;flex:none}
+  .in-hint{display:none}
   html,body{height:auto}
   .app{height:auto}
   .main{display:block}
@@ -246,10 +279,14 @@ details.src a{color:var(--accent);word-break:break-all}
 <div class="app">
   <header class="bar">
     <div class="brand">
-      <h1>高藤邸 外壁カラーシミュレーター</h1>
+      <h1><span id="appTitle">高藤邸 外壁カラーシミュレーター</span></h1>
       <p>プランNo.5（2026.06.09）・木造3階建・インナーガレージ／<span class="num">間口 4,400 × 奥行 10,010 mm</span></p>
     </div>
     <div class="bar-actions">
+      <div class="seg app-mode" id="appMode" role="tablist" aria-label="モード">
+        <button type="button" data-app="exterior" aria-pressed="true">外観</button>
+        <button type="button" data-app="interior" aria-pressed="false">内観</button>
+      </div>
       <div class="seg" id="modeSeg">
         <button type="button" data-mode="single" aria-pressed="true">1画面</button>
         <button type="button" data-mode="compare" aria-pressed="false">2画面で比較</button>
@@ -376,6 +413,7 @@ details.src a{color:var(--accent);word-break:break-all}
       </section>
     </aside>
   </main>
+  <main class="main interior" id="interiorRoot" hidden></main>
 </div>
 
 <div class="modal" id="modal" hidden>
@@ -401,6 +439,7 @@ details.src a{color:var(--accent);word-break:break-all}
       <li><b>2案を比べる</b>「2画面で比較」を押すと A・B が並びます。「編集中」でどちらを変えるか選び、「A の内容を B にコピー」で叩き台を作ると早いです。</li>
       <li><b>見る角度を変える</b>指1本で回転、2本指でズーム・移動。視点ボタンで正面・側面・鳥瞰に切り替え。2画面は視点が連動します。</li>
       <li><b>画像にして残す</b>「画像にする」で材料の一覧付き画像を作成。スマホは画像を長押しして保存します。</li>
+      <li><b>内観を見る</b>画面上の「内観」に切り替えると、LDKと各洋室の中を確認できます。部屋を選び、壁紙・アクセントクロス・天井・床・室内ドアの色、家具、照明（昼／夜で明かりを確認）、コンセント・スイッチ・TV端子・LAN・エアコンの位置を試せます。家具や器具はクリックで選択、ドラッグで移動します。</li>
       <li><b>カタログの品番を足す</b>一覧にない材は「外壁材を登録」で品番・柄・色を入れて追加（このブラウザに保存）。</li>
     </ol>
     <p class="note">スマホでは、パースを上に固定したまま下のパネルをスクロールできます。選んだ結果をすぐ確認できます。</p>
@@ -1322,7 +1361,7 @@ function focusSection(sec) {
 function loop() {
   requestAnimationFrame(loop);
   for (const s of ['A', 'B']) {
-    const vw = viewers[s]; if (!vw || vw.el.parentElement.hidden) continue;
+    const vw = viewers[s]; if (!vw || vw.el.parentElement.hidden || APP.mode === 'interior') continue;
     const moved = vw.controls.update();
     if (vw.dirty || moved) vw.render();
   }
@@ -1499,7 +1538,9 @@ function bindUI() {
     for (const s of ['A', 'B']) for (const [z] of ZONES) if (S[s][z] === id) S[s][z] = DEFAULT[s][z];
     applyAll(); refreshUI(); save();
   });
-  $('#snapBtn').addEventListener('click', snapshot);
+  $('#snapBtn').addEventListener('click', () => APP.mode === 'interior' ? interiorSnap() : snapshot());
+  $('#appMode').addEventListener('click', e => { const b = e.target.closest('[data-app]'); if (b) setAppMode(b.dataset.app); });
+  window.addEventListener('hashchange', () => setAppMode(location.hash === '#interior' ? 'interior' : 'exterior', true));
   $('#gateChk').addEventListener('change', e => setState(st => { st.gateOn = e.target.checked; }));
   $('#helpBtn').addEventListener('click', () => { $('#help').hidden = false; $('#closeHelp').focus(); });
   $('#closeHelp').addEventListener('click', () => { $('#help').hidden = true; $('#helpBtn').focus(); });
@@ -1516,6 +1557,33 @@ function syncFrom(vw) {
 /* =========================================================
    画像化
    ========================================================= */
+/* =========================================================
+   外観／内観モード
+   ========================================================= */
+const APP = { mode: 'exterior', interior: null };
+async function setAppMode(mode, fromHash) {
+  APP.mode = mode;
+  for (const b of document.querySelectorAll('#appMode button')) b.setAttribute('aria-pressed', b.dataset.app === mode);
+  const inn = mode === 'interior';
+  document.querySelector('main.main:not(.interior)').hidden = inn; $('#interiorRoot').hidden = !inn; $('#modeSeg').hidden = inn;
+  $('#appTitle').textContent = inn ? '高藤邸 内観シミュレーター' : '高藤邸 外壁カラーシミュレーター';
+  try { localStorage.setItem('kmew-app-mode', mode); } catch (e) { /* ignore */ }
+  if (!fromHash) { try { history.replaceState(null, '', inn ? '#interior' : location.pathname + location.search); } catch (e) { /* ignore */ } }
+  if (inn) {
+    if (!APP.interior) {
+      $('#interiorRoot').innerHTML = '<p class="note" style="padding:16px">内観を準備しています…</p>';
+      const m = await import('./interior.js');
+      APP.interior = m.createInterior($('#interiorRoot'));
+    }
+    APP.interior.show(true);
+  } else if (APP.interior) APP.interior.show(false);
+  if (!inn) requestAnimationFrame(() => { viewers.A.resize(); viewers.B.resize(); });
+}
+function interiorSnap() {
+  if (!APP.interior) return;
+  const url = APP.interior.snapshot();
+  $('#snapImg').src = url; $('#dlLink').href = url; $('#modal').hidden = false;
+}
 async function snapshot() {
   const sides = S.mode === 'compare' ? ['A', 'B'] : ['A'];
   const imgs = sides.map(s => {
@@ -1572,6 +1640,9 @@ setTimeout(() => {
   for (const s of ['A', 'B']) viewers[s].setHouse(houseGeos);
   applyAll(); refreshUI();
   $('#loadA').remove(); $('#loadB').remove();
+  let startMode = 'exterior'; try { startMode = localStorage.getItem('kmew-app-mode') || 'exterior'; } catch (e) { /* ignore */ }
+  if (location.hash === '#interior') startMode = 'interior';
+  if (startMode === 'interior') setAppMode('interior');
 }, 30);
 </script>
 </body>
