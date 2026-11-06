@@ -521,16 +521,16 @@ const OPTIONS = {
     { id: 'YL252', name: 'ニチハ 軒天14 木目調 YL252 ミディアム', img: 'nichiha/YL252.jpg', hex: '#956353' },
     { id: 'YL253', name: 'ニチハ 軒天14 木目調 YL253 ダーク', img: 'nichiha/YL253.jpg', hex: '#4e3b3c' },
   ],
-  roof: [ // ケイミュー カラーベスト コロニアル遮熱グラッサ（全9色。表示色は色名からの近似色）
-    { id: 'black', name: 'グラッサ・クールブラック（CC862K）', hex: '#2b2d2f' },
-    { id: 'brown', name: 'グラッサ・クールブラウン（CC821K）', hex: '#4d3d31' },
-    { id: 'green', name: 'グラッサ・クールグリーン（CC877KG）', hex: '#3d4b3f' },
-    { id: 'blue', name: 'グラッサ・クールブルー（CC826KG）', hex: '#33465c' },
-    { id: 'red', name: 'グラッサ・クールレッド（CC893KG）', hex: '#7a3530' },
-    { id: 'orange', name: 'グラッサ・クールオレンジ（CC823KG）', hex: '#ad6338' },
-    { id: 'beige', name: 'グラッサ・クールベージュ（CC833KG）', hex: '#b6a283' },
-    { id: 'silver', name: 'グラッサ・クールシルバー（CC835K）', hex: '#a3a7aa' },
-    { id: 'white', name: 'グラッサ・クールホワイト（CC825K）', hex: '#dbdbd6' },
+  roof: [ // ケイミュー カラーベスト コロニアル遮熱グラッサ（全9色。柄はケイミュー商品ページの色見本）
+    { id: 'black', name: 'グラッサ・クールブラック（CC862K）', hex: '#4f5157', img: 'kmew/roof/black.jpg' },
+    { id: 'brown', name: 'グラッサ・クールブラウン（CC821K）', hex: '#544b46', img: 'kmew/roof/brown.jpg' },
+    { id: 'green', name: 'グラッサ・クールグリーン（CC877KG）', hex: '#5c655b', img: 'kmew/roof/green.jpg' },
+    { id: 'blue', name: 'グラッサ・クールブルー（CC826KG）', hex: '#34415c', img: 'kmew/roof/blue.jpg' },
+    { id: 'red', name: 'グラッサ・クールレッド（CC893KG）', hex: '#9f5d4e', img: 'kmew/roof/red.jpg' },
+    { id: 'orange', name: 'グラッサ・クールオレンジ（CC823KG）', hex: '#b09a89', img: 'kmew/roof/orange.jpg' },
+    { id: 'beige', name: 'グラッサ・クールベージュ（CC833KG）', hex: '#96887d', img: 'kmew/roof/beige.jpg' },
+    { id: 'silver', name: 'グラッサ・クールシルバー（CC835K）', hex: '#ababaf', img: 'kmew/roof/silver.jpg' },
+    { id: 'white', name: 'グラッサ・クールホワイト（CC825K）', hex: '#d0cfcd', img: 'kmew/roof/white.jpg' },
   ],
   gate: [
     { id: 'charcoal', name: 'チャコールネイビー（塗り壁）', hex: '#3b4049' },
@@ -1312,7 +1312,15 @@ class Viewer {
     else { M.soffit.map = null; M.soffit.normalMap = null; M.soffit.color.set(sof.hex); M.soffit.userData.have = sof.id; }
     M.soffit.needsUpdate = true;
     const rf = opt('roof', st.roof);
-    M.roof.map = roofTex(); M.roof.normalMap = normTex('roof'); M.roof.color.set(rf.hex); M.roof.needsUpdate = true;
+    M.roof.userData.want = rf.id;
+    if (rf.img && CAN_TEXTURE) {
+      if (M.roof.userData.have !== rf.id) { M.roof.map = roofTex(); M.roof.color.set(rf.hex); }
+      imgTex(rf.img, 1.16, 0.66).then(t => {
+        if (M.roof.userData.want !== rf.id) return;
+        M.roof.map = t; M.roof.normalMap = null; M.roof.color.set('#ffffff'); M.roof.userData.have = rf.id; M.roof.needsUpdate = true; this.dirty = true;
+      }).catch(() => {});
+    } else { M.roof.map = roofTex(); M.roof.color.set(rf.hex); M.roof.userData.have = rf.id; }
+    if (M.roof.userData.have !== rf.id || !rf.img) M.roof.normalMap = normTex('roof'); M.roof.needsUpdate = true;
     M.fascia.color.set(rf.hex);
     const dd = doorPick(st), dr = opt('door', st.door);
     M.door.userData.want = dd ? dd.key : '';
