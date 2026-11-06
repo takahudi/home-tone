@@ -384,7 +384,7 @@ details.src a{color:var(--accent);word-break:break-all}
         <p class="note">屋根の軒裏、3階インナーバルコニーとインナーガレージの天井に反映されます。木目調はニチハ 軒天14（14mm厚品）無孔板の YL251 ライト／YL252 ミディアム／YL253 ダークです。</p>
       </section>
       <section class="sec">
-        <div class="sec-h"><h2>屋根・破風</h2><span class="cur" id="cur-roof"></span></div>
+        <div class="sec-h"><h2>屋根（コロニアル遮熱グラッサ）・破風</h2><span class="cur" id="cur-roof"></span></div>
         <div class="colors" data-cat="roof"></div>
         <div class="seg" id="roofSeg">
           <button type="button" data-roof="mono" aria-pressed="true">片流れ（パース）</button>
@@ -521,12 +521,16 @@ const OPTIONS = {
     { id: 'YL252', name: 'ニチハ 軒天14 木目調 YL252 ミディアム', img: 'nichiha/YL252.jpg', hex: '#956353' },
     { id: 'YL253', name: 'ニチハ 軒天14 木目調 YL253 ダーク', img: 'nichiha/YL253.jpg', hex: '#4e3b3c' },
   ],
-  roof: [
-    { id: 'black', name: 'グラッサ・ブラック（CC562K）', hex: '#2b2d2f' },
-    { id: 'charcoal', name: 'チャコールグレー', hex: '#4b4e51' },
-    { id: 'brown', name: 'ブラウン', hex: '#4d3d31' },
-    { id: 'green', name: 'グリーン', hex: '#3e4b40' },
-    { id: 'silver', name: 'シルバー', hex: '#8e9295' },
+  roof: [ // ケイミュー カラーベスト コロニアル遮熱グラッサ（全9色。表示色は色名からの近似色）
+    { id: 'black', name: 'グラッサ・クールブラック（CC862K）', hex: '#2b2d2f' },
+    { id: 'brown', name: 'グラッサ・クールブラウン（CC821K）', hex: '#4d3d31' },
+    { id: 'green', name: 'グラッサ・クールグリーン（CC877KG）', hex: '#3d4b3f' },
+    { id: 'blue', name: 'グラッサ・クールブルー（CC826KG）', hex: '#33465c' },
+    { id: 'red', name: 'グラッサ・クールレッド（CC893KG）', hex: '#7a3530' },
+    { id: 'orange', name: 'グラッサ・クールオレンジ（CC823KG）', hex: '#ad6338' },
+    { id: 'beige', name: 'グラッサ・クールベージュ（CC833KG）', hex: '#b6a283' },
+    { id: 'silver', name: 'グラッサ・クールシルバー（CC835K）', hex: '#a3a7aa' },
+    { id: 'white', name: 'グラッサ・クールホワイト（CC825K）', hex: '#dbdbd6' },
   ],
   gate: [
     { id: 'charcoal', name: 'チャコールネイビー（塗り壁）', hex: '#3b4049' },
