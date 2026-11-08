@@ -868,7 +868,8 @@ function doorTex(pk) {
     const c = mkCanvas(DT.w * 2, DT.h * 2), g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
     g.drawImage(img, (pk.i % DT.cols) * DT.w, Math.floor(pk.i / DT.cols) * DT.h, DT.w, DT.h, 0, 0, DT.w * 2, DT.h * 2);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-    t.repeat.set(1 / DOOR_SIZE.w, 1 / DOOR_SIZE.h); t.offset.set(-DOOR_SIZE.u0 / DOOR_SIZE.w, -DOOR_SIZE.y0 / DOOR_SIZE.h);
+    // カタログ写真を左右反転して貼る（開く向き＝取っ手の位置を写真と逆勝手にする）
+    t.repeat.set(-1 / DOOR_SIZE.w, 1 / DOOR_SIZE.h); t.offset.set(DOOR_SIZE.u1 / DOOR_SIZE.w, -DOOR_SIZE.y0 / DOOR_SIZE.h);
     return t;
   }));
 }
@@ -1095,7 +1096,7 @@ function buildHouse(roofType) {
   reveals(B, GBK, door, { fixed: 'garage', sill: 'garage' });
   B('door').quad(P(GBK, door.u0, door.y0, 0.04), P(GBK, door.u1, door.y0, 0.04), P(GBK, door.u1, door.y1, 0.04), P(GBK, door.u0, door.y1, 0.04), Z, X, Y, O0);
   ring(B, GBK, door.u0 - 0.035, door.u1 + 0.035, door.y0, door.y1 + 0.035, 0.04, 0.02, 0.05);
-  boxF(B, 'handle', GBK, door.u1 - 0.1, 1.15, 0.015, 0.025, 0.75, 0.03);
+  boxF(B, 'handle', GBK, door.u0 + 0.1, 1.15, 0.015, 0.025, 0.75, 0.03);
   B('tile').box(v((door.u0 + door.u1) / 2, 0.085, G.z1 + 0.22), X, Y, Z, 1.15, 0.17, 0.44);
   const GN = { o: v(G.x0, 0, 0), U: v(0, 0, -1), N: X };
   wallRegion(B, GN, 0.15, -G.z1, 0, G.top, [{ u0: 2.86, u1: 3.58, y0: 0, y1: 2.4 }], 'garage');
