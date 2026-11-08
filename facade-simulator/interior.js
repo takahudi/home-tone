@@ -985,7 +985,7 @@ export function createInterior(root, { onPlan } = {}) {
       const iw = cols[0].img.width, ih = cols[0].img.height, nl = Math.max(...cols.map(c => c.lines.length));
       const c = mkC(iw * cols.length + pad * (cols.length + 1), head + ih + nl * lh + pad * 2), g = c.getContext('2d');
       g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.fillStyle = '#1b2023'; g.font = `700 ${Math.round(17 * sc)}px "Zen Kaku Gothic New", sans-serif`; g.textBaseline = 'middle';
-      g.fillText(`高藤邸 内観シミュレーション（プランNo.5）${room.floor} ${room.name}（${room.size}）${cols.length > 1 ? '' : `　プラン${cols[0].s}`}`, pad, head / 2);
+      g.fillText(`内観シミュレーション（プランNo.5）${room.floor} ${room.name}（${room.size}）${cols.length > 1 ? '' : `　プラン${cols[0].s}`}`, pad, head / 2);
       cols.forEach((col, i) => {
         const x = pad + i * (iw + pad);
         g.drawImage(col.img, x, head);

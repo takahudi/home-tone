@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>高藤邸 外壁カラーシミュレーター</title>
+<title>外壁カラーシミュレーター</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -315,7 +315,7 @@ details.in-fl>.colors{margin-top:8px}
 <div class="app">
   <header class="bar">
     <div class="brand">
-      <h1><span id="appTitle">高藤邸 外壁カラーシミュレーター</span></h1>
+      <h1><span id="appTitle">外壁カラーシミュレーター</span></h1>
       <p>プランNo.5（2026.06.09）・木造3階建・インナーガレージ／<span class="num">間口 4,400 × 奥行 10,010 mm</span></p>
     </div>
     <div class="bar-actions">
@@ -1641,10 +1641,10 @@ function bindUI() {
     save(); if (APP.interior) APP.interior.save(); // 外観・内観とも最新を保存してから
     const get = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
     const parse = v => { try { return v == null ? null : JSON.parse(v); } catch (e) { return null; } };
-    const data = { app: 'takafuji-home-sim', version: 2, savedAt: new Date().toISOString(),
+    const data = { app: 'home-tone-sim', version: 2, savedAt: new Date().toISOString(),
       exterior: parse(get(FILE_KEYS.exterior)) || { S, userProducts }, interior: parse(get(FILE_KEYS.interior)), appMode: APP.mode };
     const d = new Date(), pad = n => String(n).padStart(2, '0');
-    const name = `takafuji-sim-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.json`;
+    const name = `home-tone-sim-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.json`;
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }));
     const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000); $('#fileMenu').open = false;
@@ -1653,7 +1653,7 @@ function bindUI() {
   $('#importFile').addEventListener('change', async e => {
     const f = e.target.files && e.target.files[0]; if (!f) return;
     let data; try { data = JSON.parse(await f.text()); } catch (err) { alert('ファイルを読み込めませんでした（JSON ではありません）。'); return; }
-    if (!data || data.app !== 'takafuji-home-sim' || !data.exterior || !data.exterior.S) { alert('このシミュレーターで書き出したファイルではないようです。'); return; }
+    if (!data || !data.exterior || !data.exterior.S) { alert('このシミュレーターで書き出したファイルではないようです。'); return; }
     const when = data.savedAt ? new Date(data.savedAt).toLocaleString('ja-JP') : '不明';
     if (!confirm(`「${f.name}」（${when} に保存）を読み込みます。\n今の外観・内観の状態は置き換わります。よろしいですか？`)) return;
     try {
@@ -1700,7 +1700,7 @@ async function setAppMode(mode, fromHash) {
   for (const b of document.querySelectorAll('#appMode button')) b.setAttribute('aria-pressed', b.dataset.app === mode);
   const inn = mode === 'interior';
   document.querySelector('main.main:not(.interior)').hidden = inn; $('#interiorRoot').hidden = !inn;
-  $('#appTitle').textContent = inn ? '高藤邸 内観シミュレーター' : '高藤邸 外壁カラーシミュレーター';
+  $('#appTitle').textContent = inn ? '内観シミュレーター' : '外壁カラーシミュレーター';
   try { localStorage.setItem('kmew-app-mode', mode); } catch (e) { /* ignore */ }
   if (!fromHash) { try { history.replaceState(null, '', inn ? '#interior' : location.pathname + location.search); } catch (e) { /* ignore */ } }
   if (inn) {
@@ -1731,7 +1731,7 @@ async function snapshot() {
   const c = mkCanvas(iw * imgs.length + gap * (imgs.length + 1), head + ih + legH + gap), g = c.getContext('2d');
   g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
   g.fillStyle = '#1b2023'; g.font = `700 ${Math.round(17 * sc)}px "Zen Kaku Gothic New", sans-serif`; g.textBaseline = 'middle';
-  g.fillText(`高藤邸 外壁カラーシミュレーション（プランNo.5）${sides.length > 1 ? '' : `　プラン${sides[0]}`}`, gap, head / 2);
+  g.fillText(`外壁カラーシミュレーション（プランNo.5）${sides.length > 1 ? '' : `　プラン${sides[0]}`}`, gap, head / 2);
   for (let i = 0; i < imgs.length; i++) {
     const im = imgs[i];
     const x = gap + i * (iw + gap), side = sides[i], st = S[side];
