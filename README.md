@@ -1,6 +1,10 @@
 # 外壁カラーシミュレーター（高藤邸 プランNo.5）
 
-外観パースの外壁カラーシミュレーターです（ビルド不要・three.js は CDN から読み込み）。外壁の柄画像を読み込むため、`facade-simulator/` を Web サーバー経由（GitHub Pages、または `python3 -m http.server` など）で開いてください。ファイルを直接開くと柄が出ず、色のみの表示になります（内観も開けません）。
+外観パースの外壁カラーシミュレーターです（ビルド不要・three.js は CDN から読み込み）。
+
+**公開ページ：** https://takahudi.github.io/home-tone/ （`main` に push すると GitHub Actions で自動更新。内観は https://takahudi.github.io/home-tone/#interior ）
+
+外壁の柄画像を読み込むため、`facade-simulator/` を Web サーバー経由（GitHub Pages、または `python3 -m http.server` など）で開いてください。ファイルを直接開くと柄が出ず、色のみの表示になります（内観も開けません）。
 
 **ローカルで開く（uv + Python 3.12）：** 初回だけプロジェクト直下で `uv sync` を実行して仮想環境（`.venv`）を作り、以降は `uv run serve.py` でサーバーが起動してブラウザで `http://localhost:8000/` が開きます（`--port 9000`、`--no-browser` も指定可、Ctrl+C で停止）。Windows なら `facade-simulator/start.cmd` のダブルクリックでも同じように開けます（黒いウィンドウを閉じると停止）。
 
