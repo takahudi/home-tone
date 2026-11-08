@@ -97,10 +97,10 @@ button{cursor:pointer}
 .stage.compare .viewer.editing{box-shadow:0 0 0 3px var(--side-color)}
 .pane[data-side="A"]{--side-color:var(--plan-a)}
 .pane[data-side="B"]{--side-color:var(--plan-b)}
-.vtag{position:absolute;top:10px;left:10px;display:none;align-items:center;gap:6px;padding:3px 10px 3px 4px;border-radius:999px;
+.vtag{position:absolute;top:10px;left:10px;align-items:center;gap:6px;padding:3px 10px 3px 4px;border-radius:999px;
   background:var(--ov-bg);color:var(--ov-ink);font-size:12px;font-weight:700;pointer-events:none}
 .vtag b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--side-color);color:#fff;font-size:12px}
-.stage.compare .vtag{display:inline-flex}
+.vtag{display:inline-flex}
 .pane{display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0}
 .pane .viewer{flex:1}
 .legend{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:11.5px;line-height:1.35;
@@ -324,7 +324,8 @@ details.in-fl>.colors{margin-top:8px}
         <button type="button" data-app="interior" aria-pressed="false">内観</button>
       </div>
       <div class="seg" id="modeSeg">
-        <button type="button" data-mode="single" aria-pressed="true">1画面</button>
+        <button type="button" data-mode="single" data-side="A" aria-pressed="true">1画面 A</button>
+        <button type="button" data-mode="single" data-side="B" aria-pressed="false">1画面 B</button>
         <button type="button" data-mode="compare" aria-pressed="false">2画面で比較</button>
       </div>
       <details class="file-menu" id="fileMenu">
@@ -370,6 +371,7 @@ details.in-fl>.colors{margin-top:8px}
         <div class="pane" id="pB" data-side="B" hidden>
           <div class="viewer" id="vB">
             <div class="vtag"><b>B</b>プランB</div>
+            <div class="hint">ドラッグで回転・右ドラッグで移動・ホイールで拡大／壁をクリックで部位を選択</div>
             <div class="loading" id="loadB">外壁材を準備しています…</div>
           </div>
           <div class="legend" id="legB"></div>
@@ -486,10 +488,10 @@ details.in-fl>.colors{margin-top:8px}
       <li><b>塗る場所を選ぶ</b>「外壁」の <em>3階・バルコニー内・2階・1階・ガレージ</em> から1つタップ。パースの壁を直接タップしても選べます。「バルコニー内」は3階インナーバルコニーの奥の壁と左右の壁です。</li>
       <li><b>外壁材を選ぶ</b>下の一覧から材をタップ。検索欄に<em>品番や色名</em>（例：AH5935、シルク）を入れるか、<em>シリーズ</em>と<em>色の系統</em>で絞り込めます。全部の階を同じ材にするときは「この材を1〜3階すべてに」（バルコニー内も含みます）。縦張りできる柄は「縦張りで表示する」で向きを変えられます。</li>
       <li><b>窓枠・軒天・屋根・ドア・門柱</b>色の丸をタップ。玄関ドアはYKK AP ヴェナートD30のデザインを選んだあと、そのデザインのカラーから色を選びます。門柱は「門柱を表示する」で出し入れできます。虹色の丸を押すと好きな色を指定できます。屋根は片流れ／寄棟を切り替えられます。</li>
-      <li><b>2案を比べる</b>「2画面で比較」を押すと A・B が並びます。「編集中」でどちらを変えるか選び、「A の内容を B にコピー」で叩き台を作ると早いです。</li>
+      <li><b>2案を比べる</b>「1画面 A」「1画面 B」でどちらか一方を大きく表示・編集できます。「2画面で比較」を押すと A・B が並びます。「編集中」でどちらを変えるか選び、「A の内容を B にコピー」で叩き台を作ると早いです。</li>
       <li><b>見る角度を変える</b>指1本で回転、2本指でズーム・移動。視点ボタンで正面・側面・鳥瞰に切り替え。2画面は視点が連動します。</li>
       <li><b>画像にして残す</b>「画像にする」で材料の一覧付き画像を作成。スマホは画像を長押しして保存します。</li>
-      <li><b>内観を見る</b>画面上の「内観」に切り替えると、LDKと各洋室の中を確認できます。部屋を選び、壁紙・アクセントクロス・天井・床・室内ドアの色、家具、照明（昼／夜で明かりを確認）、コンセント・スイッチ・TV端子・LAN・エアコンの位置を試せます。家具や器具はクリックで選択、ドラッグで移動します。</li>
+      <li><b>内観を見る</b>画面上の「内観」に切り替えると、LDKと各洋室の中を確認できます。部屋を選び、壁紙・アクセントクロス・天井・床・室内ドアの色、家具、照明（昼／夜で明かりを確認）、コンセント・スイッチ・TV端子・LAN・エアコンの位置を試せます。家具や器具はクリックで選択、ドラッグで移動します。内観も「1画面 A／1画面 B／2画面で比較」でA・B2案を作って比べられます（「A の内容を B にコピー」で全部屋をまるごとコピー）。</li>
       <li><b>状態をファイルに残す</b>「保存・読込」→「ファイルに書き出す」で、外観と内観の今の状態を JSON ファイルに保存。別のブラウザや端末でも「ファイルから読み込む」で同じ状態に戻せます（読み込むと今の状態は置き換わります）。</li>
       <li><b>カタログの品番を足す</b>一覧にない材は「外壁材を登録」で品番・柄・色を入れて追加（このブラウザに保存）。</li>
     </ol>
@@ -1540,21 +1542,26 @@ function renderDoors() {
 function renderUserList() {
   $('#userList').innerHTML = userProducts.map(p => `<div><span>${esc(prodLabel(p))}</span><button type="button" data-del="${esc(p.id)}">削除</button></div>`).join('');
 }
+// 「1画面 A／1画面 B／2画面で比較」の押下状態（外観・内観で共通のボタン）
+function paintModeSeg(mode, edit) {
+  for (const b of document.querySelectorAll('#modeSeg button')) b.setAttribute('aria-pressed', b.dataset.mode === mode && (mode === 'compare' || b.dataset.side === edit));
+}
 function refreshUI(full = true) {
   const cmp = S.mode === 'compare';
-  for (const b of document.querySelectorAll('#modeSeg button')) b.setAttribute('aria-pressed', b.dataset.mode === S.mode);
+  if (APP.mode !== 'interior') paintModeSeg(S.mode, S.edit);
   for (const b of document.querySelectorAll('#roofSeg button')) b.setAttribute('aria-pressed', b.dataset.roof === S.roofType);
   for (const b of document.querySelectorAll('[data-edit]')) b.setAttribute('aria-pressed', b.dataset.edit === S.edit);
-  $('#editTarget').classList.toggle('show', cmp);
+  $('#editTarget').classList.add('show');
   $('#syncWrap').hidden = !cmp;
   $('#sync').checked = S.sync;
   $('#legendChk').checked = S.legend;
   $('#gateChk').checked = cur().gateOn !== false;
   $('#stage').classList.toggle('compare', cmp);
   $('#stage').classList.toggle('no-legend', !S.legend);
-  $('#pB').hidden = !cmp;
-  $('#vA').classList.toggle('editing', !cmp || S.edit === 'A');
-  $('#vB').classList.toggle('editing', cmp && S.edit === 'B');
+  $('#pA').hidden = !cmp && S.edit !== 'A'; // 1画面では編集中のプランだけを表示
+  $('#pB').hidden = !cmp && S.edit !== 'B';
+  $('#vA').classList.toggle('editing', S.edit === 'A');
+  $('#vB').classList.toggle('editing', S.edit === 'B');
   const other = S.edit === 'A' ? 'B' : 'A';
   $('#copyBtn').textContent = `${S.edit} の内容を ${other} にコピー`;
   if (!full) return;
@@ -1565,12 +1572,12 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 function bindUI() {
   $('#modeSeg').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
-    S.mode = b.dataset.mode; if (S.mode === 'single') S.edit = 'A';
-    refreshUI(); save();
-    requestAnimationFrame(() => { viewers.A.resize(); viewers.B.resize(); if (S.mode === 'compare') syncFrom(viewers.A); });
+    if (APP.mode === 'interior') { if (APP.interior) APP.interior.setPlan(b.dataset.mode, b.dataset.side); return; }
+    const prev = S.edit; S.mode = b.dataset.mode; if (b.dataset.side) S.edit = b.dataset.side;
+    showPlans(prev);
   });
   document.querySelector('#editTarget').addEventListener('click', e => {
-    const t = e.target.closest('[data-edit]'); if (t) { S.edit = t.dataset.edit; refreshUI(); save(); }
+    const t = e.target.closest('[data-edit]'); if (t) { const prev = S.edit; S.edit = t.dataset.edit; showPlans(prev); }
   });
   $('#copyBtn').addEventListener('click', () => {
     const other = S.edit === 'A' ? 'B' : 'A'; S[other] = structuredClone(S[S.edit]);
@@ -1668,6 +1675,14 @@ function bindUI() {
   $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') $('#modal').hidden = true; });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('#modal').hidden = true; $('#help').hidden = true; } });
 }
+// 表示・編集するプランを切り替える。1画面で A↔B を切り替えたときは、直前の視点をそのまま引き継ぐ
+function showPlans(prev) {
+  refreshUI(); save();
+  requestAnimationFrame(() => {
+    viewers.A.resize(); viewers.B.resize();
+    if (S.mode === 'compare') syncFrom(viewers[prev]); else if (prev !== S.edit) syncFrom(viewers[prev]);
+  });
+}
 function syncFrom(vw) {
   const other = viewers[vw.side === 'A' ? 'B' : 'A'];
   other.cam.position.copy(vw.cam.position); other.controls.target.copy(vw.controls.target); other.controls.update(); other.dirty = true;
@@ -1684,7 +1699,7 @@ async function setAppMode(mode, fromHash) {
   APP.mode = mode;
   for (const b of document.querySelectorAll('#appMode button')) b.setAttribute('aria-pressed', b.dataset.app === mode);
   const inn = mode === 'interior';
-  document.querySelector('main.main:not(.interior)').hidden = inn; $('#interiorRoot').hidden = !inn; $('#modeSeg').hidden = inn;
+  document.querySelector('main.main:not(.interior)').hidden = inn; $('#interiorRoot').hidden = !inn;
   $('#appTitle').textContent = inn ? '高藤邸 内観シミュレーター' : '高藤邸 外壁カラーシミュレーター';
   try { localStorage.setItem('kmew-app-mode', mode); } catch (e) { /* ignore */ }
   if (!fromHash) { try { history.replaceState(null, '', inn ? '#interior' : location.pathname + location.search); } catch (e) { /* ignore */ } }
@@ -1692,11 +1707,11 @@ async function setAppMode(mode, fromHash) {
     if (!APP.interior) {
       $('#interiorRoot').innerHTML = '<p class="note" style="padding:16px">内観を準備しています…</p>';
       const m = await import('./interior.js');
-      APP.interior = m.createInterior($('#interiorRoot'));
+      APP.interior = m.createInterior($('#interiorRoot'), { onPlan: (mode, edit) => { if (APP.mode === 'interior') paintModeSeg(mode, edit); } });
     }
     APP.interior.show(true);
   } else if (APP.interior) APP.interior.show(false);
-  if (!inn) requestAnimationFrame(() => { viewers.A.resize(); viewers.B.resize(); });
+  if (!inn) { paintModeSeg(S.mode, S.edit); requestAnimationFrame(() => { viewers.A.resize(); viewers.B.resize(); }); }
 }
 function interiorSnap() {
   if (!APP.interior) return;
@@ -1704,7 +1719,7 @@ function interiorSnap() {
   $('#snapImg').src = url; $('#dlLink').href = url; $('#modal').hidden = false;
 }
 async function snapshot() {
-  const sides = S.mode === 'compare' ? ['A', 'B'] : ['A'];
+  const sides = S.mode === 'compare' ? ['A', 'B'] : [S.edit];
   const imgs = sides.map(s => {
     viewers[s].render(); const src = viewers[s].renderer.domElement, cp = mkCanvas(src.width, src.height);
     cp.getContext('2d').drawImage(src, 0, 0); return cp;
@@ -1716,7 +1731,7 @@ async function snapshot() {
   const c = mkCanvas(iw * imgs.length + gap * (imgs.length + 1), head + ih + legH + gap), g = c.getContext('2d');
   g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
   g.fillStyle = '#1b2023'; g.font = `700 ${Math.round(17 * sc)}px "Zen Kaku Gothic New", sans-serif`; g.textBaseline = 'middle';
-  g.fillText('高藤邸 外壁カラーシミュレーション（プランNo.5）', gap, head / 2);
+  g.fillText(`高藤邸 外壁カラーシミュレーション（プランNo.5）${sides.length > 1 ? '' : `　プラン${sides[0]}`}`, gap, head / 2);
   for (let i = 0; i < imgs.length; i++) {
     const im = imgs[i];
     const x = gap + i * (iw + gap), side = sides[i], st = S[side];
