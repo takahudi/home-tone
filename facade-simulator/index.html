@@ -139,6 +139,14 @@ button{cursor:pointer}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:10px 8px;align-items:start}
 .g-h{grid-column:1/-1;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:700;padding-top:8px;border-top:1px solid var(--line)}
 .g-h:first-child{border-top:0;padding-top:0}
+.ser-list{display:grid;gap:8px}
+details.ser{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+details.ser>summary{cursor:pointer;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:9px 12px;font-size:13.5px;list-style:none}
+details.ser>summary::-webkit-details-marker{display:none}
+details.ser>summary::before{content:"";width:6px;height:6px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);margin-right:2px;align-self:center;transition:transform .15s}
+details.ser[open]>summary::before{transform:rotate(45deg)}
+details.ser>summary span{font-size:11.5px;color:var(--muted)}
+details.ser>.grid{padding:4px 12px 12px}
 .g-h span{font-size:11px;font-weight:400;color:var(--muted)}
 .swimg{display:block;width:76px;max-width:100%;aspect-ratio:1/1;border-radius:6px;background-repeat:no-repeat;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),0 0 0 1px var(--line)}
 .sw-btn[aria-pressed="true"] .swimg{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
@@ -354,7 +362,7 @@ details.src a{color:var(--accent);word-break:break-all}
           <div class="filters fam" id="famFilters" aria-label="色の系統"></div>
           <div class="count" id="gridCount"></div>
         </div>
-        <div class="grid" id="wallGrid"></div>
+        <div class="ser-list" id="wallGrid"></div>
         <p class="note">ケイミュー「外壁材商品ラインナップ」（ご提供カタログ P.126〜137）の254色を収録しています。壁の柄はカタログの色見本画像を実寸（見本の高さ＝455mm）で貼っています。「資料記載」は外観パース資料の採用品です。印刷物と画面では色が異なるため、最終決定は実物サンプルで確認してください。カタログにない品番は「外壁材を登録」で追加できます。</p>
         <details class="add">
           <summary>外壁材を登録（品番・色を入力）</summary>
@@ -1427,13 +1435,23 @@ function renderGrid() {
   const list = allWalls().filter(p => (S.filter === 'all' || (S.filter === 'user' ? p.user : p.series === S.filter))
     && (S.fam === 'all' || p.fam === S.fam || p.user)
     && (!q || prodLabel(p).replace(/[＊*]/g, '').toLowerCase().includes(q)));
-  let html = '', last = '';
-  for (const p of list) {
-    const grp = p.user ? '登録品' : `${p.series}｜${p.design}`;
-    if (grp !== last) { last = grp; html += `<div class="g-h">${esc(p.user ? '登録品' : p.design)}${p.user ? '' : `<span>${esc(p.series)}・${esc(p.orient)}張り${p.price ? `・${p.price.toLocaleString()}円/枚` : ''}</span>`}</div>`; }
-    html += `<button type="button" class="sw-btn" data-prod="${esc(p.id)}" aria-pressed="${p.id === sel}" title="${esc(prodLabel(p))}">
-      ${p.doc ? '<span class="badge">資料記載</span>' : ''}
-      <span class="swimg" style="${swatchStyle(p, 76)}"></span>${p.code ? `<span class="cd">${esc(p.code)}</span>` : ''}<span class="nm">${esc(p.color || p.name)}</span></button>`;
+  // シリーズ（登録品）ごとに折り畳み。開閉は保存し、未設定ならレジェールと登録品だけ開く。検索中・シリーズ絞り込み中は開いて見せる
+  const groups = new Map();
+  for (const p of list) { const k = p.user ? 'user' : p.series; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(p); }
+  S.serOpen = S.serOpen || {};
+  let html = '';
+  for (const [k, ps] of groups) {
+    const open = q || S.filter !== 'all' || (S.serOpen[k] ?? (k === 'レジェール' || k === 'user'));
+    const hasSel = ps.some(p => p.id === sel);
+    let inner = '', last = '';
+    for (const p of ps) {
+      const grp = p.user ? '登録品' : p.design;
+      if (grp !== last) { last = grp; inner += `<div class="g-h">${esc(p.user ? '登録品' : p.design)}${p.user ? '' : `<span>${esc(p.orient)}張り${p.price ? `・${p.price.toLocaleString()}円/枚` : ''}</span>`}</div>`; }
+      inner += `<button type="button" class="sw-btn" data-prod="${esc(p.id)}" aria-pressed="${p.id === sel}" title="${esc(prodLabel(p))}">
+        ${p.doc ? '<span class="badge">資料記載</span>' : ''}
+        <span class="swimg" style="${swatchStyle(p, 76)}"></span>${p.code ? `<span class="cd">${esc(p.code)}</span>` : ''}<span class="nm">${esc(p.color || p.name)}</span></button>`;
+    }
+    html += `<details class="ser" data-ser="${esc(k)}"${open ? ' open' : ''}><summary><b>${esc(k === 'user' ? '登録品' : k)}</b><span>${ps.length}点${hasSel ? '・選択中あり' : ''}</span></summary><div class="grid">${inner}</div></details>`;
   }
   $('#wallGrid').innerHTML = html || '<p class="note">条件に合う外壁材がありません。絞り込みを「すべて」「全色」に戻すか、検索語を変えてください。</p>';
   $('#gridCount').textContent = `${list.length}点`;
@@ -1534,6 +1552,8 @@ function bindUI() {
     setState(st => { st.vert = { ...(st.vert || {}), [S.zone]: e.target.checked }; });
   });
   $('#wallGrid').addEventListener('click', e => { const b = e.target.closest('[data-prod]'); if (b) setState(st => { st[S.zone] = b.dataset.prod; }); });
+  // 折り畳みの開閉を覚える（検索中・絞り込み中に開いて見せているときは保存しない）
+  $('#wallGrid').addEventListener('toggle', e => { const d = e.target; if (!d.matches?.('details.ser') || QUERY.trim() || S.filter !== 'all') return; S.serOpen = { ...S.serOpen, [d.dataset.ser]: d.open }; save(); }, true);
   $('#applyFloors').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = st.balc = p; }));
   $('#applyAll').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = st.balc = st.garage = p; }));
   $('#panel').addEventListener('click', e => { const c = e.target.closest('button.chip'); if (c) setState(st => { st[c.dataset.cat] = c.dataset.val; if (c.dataset.cat === 'door') st.doorDesign = null; }); });
