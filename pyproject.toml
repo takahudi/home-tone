@@ -1,0 +1,9 @@
+[project]
+name = "home-tone"
+version = "0.1.0"
+description = "高藤邸 外壁カラー／内観シミュレーター（ローカル確認用サーバー）"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
