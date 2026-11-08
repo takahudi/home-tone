@@ -62,6 +62,12 @@ button{cursor:pointer}
 .brand p{margin:0;font-size:12px;color:var(--muted)}
 .brand .num{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.02em}
 .bar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.file-menu{position:relative}
+.file-menu>summary{list-style:none;cursor:pointer}
+.file-menu>summary::-webkit-details-marker{display:none}
+.file-pop{position:absolute;right:0;top:calc(100% + 6px);z-index:30;display:grid;gap:6px;width:240px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.file-pop .btn{text-align:left}
+.file-pop .note{margin:0;font-size:11.5px}
 
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
 .seg button{border:0;background:transparent;padding:6px 12px;font-size:13px;font-weight:500;color:var(--muted)}
@@ -321,6 +327,15 @@ details.in-fl>.colors{margin-top:8px}
         <button type="button" data-mode="single" aria-pressed="true">1画面</button>
         <button type="button" data-mode="compare" aria-pressed="false">2画面で比較</button>
       </div>
+      <details class="file-menu" id="fileMenu">
+        <summary class="btn">保存・読込</summary>
+        <div class="file-pop">
+          <button type="button" class="btn" id="exportBtn">ファイルに書き出す</button>
+          <button type="button" class="btn" id="importBtn">ファイルから読み込む</button>
+          <p class="note">外観（A・B案、登録した外壁材）と内観（A・B案、全部屋）の今の状態を、まとめて JSON ファイルにします。</p>
+        </div>
+      </details>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
       <button type="button" class="btn" id="helpBtn" aria-haspopup="dialog">使い方</button>
       <button type="button" class="btn primary" id="snapBtn">画像にする</button>
     </div>
@@ -475,6 +490,7 @@ details.in-fl>.colors{margin-top:8px}
       <li><b>見る角度を変える</b>指1本で回転、2本指でズーム・移動。視点ボタンで正面・側面・鳥瞰に切り替え。2画面は視点が連動します。</li>
       <li><b>画像にして残す</b>「画像にする」で材料の一覧付き画像を作成。スマホは画像を長押しして保存します。</li>
       <li><b>内観を見る</b>画面上の「内観」に切り替えると、LDKと各洋室の中を確認できます。部屋を選び、壁紙・アクセントクロス・天井・床・室内ドアの色、家具、照明（昼／夜で明かりを確認）、コンセント・スイッチ・TV端子・LAN・エアコンの位置を試せます。家具や器具はクリックで選択、ドラッグで移動します。</li>
+      <li><b>状態をファイルに残す</b>「保存・読込」→「ファイルに書き出す」で、外観と内観の今の状態を JSON ファイルに保存。別のブラウザや端末でも「ファイルから読み込む」で同じ状態に戻せます（読み込むと今の状態は置き換わります）。</li>
       <li><b>カタログの品番を足す</b>一覧にない材は「外壁材を登録」で品番・柄・色を入れて追加（このブラウザに保存）。</li>
     </ol>
     <p class="note">スマホでは、パースを上に固定したまま下のパネルをスクロールできます。選んだ結果をすぐ確認できます。</p>
@@ -1612,6 +1628,36 @@ function bindUI() {
     applyAll(); refreshUI(); save();
   });
   $('#snapBtn').addEventListener('click', () => APP.mode === 'interior' ? interiorSnap() : snapshot());
+  // ---- 状態のファイル書き出し・読み込み（localStorage の内容をまとめて JSON に）----
+  const FILE_KEYS = { exterior: STORE_KEY, interior: 'kmew-interior-v1', appMode: 'kmew-app-mode' };
+  $('#exportBtn').addEventListener('click', () => {
+    save(); if (APP.interior) APP.interior.save(); // 外観・内観とも最新を保存してから
+    const get = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+    const parse = v => { try { return v == null ? null : JSON.parse(v); } catch (e) { return null; } };
+    const data = { app: 'takafuji-home-sim', version: 2, savedAt: new Date().toISOString(),
+      exterior: parse(get(FILE_KEYS.exterior)) || { S, userProducts }, interior: parse(get(FILE_KEYS.interior)), appMode: APP.mode };
+    const d = new Date(), pad = n => String(n).padStart(2, '0');
+    const name = `takafuji-sim-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.json`;
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }));
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000); $('#fileMenu').open = false;
+  });
+  $('#importBtn').addEventListener('click', () => { $('#importFile').value = ''; $('#importFile').click(); });
+  $('#importFile').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    let data; try { data = JSON.parse(await f.text()); } catch (err) { alert('ファイルを読み込めませんでした（JSON ではありません）。'); return; }
+    if (!data || data.app !== 'takafuji-home-sim' || !data.exterior || !data.exterior.S) { alert('このシミュレーターで書き出したファイルではないようです。'); return; }
+    const when = data.savedAt ? new Date(data.savedAt).toLocaleString('ja-JP') : '不明';
+    if (!confirm(`「${f.name}」（${when} に保存）を読み込みます。\n今の外観・内観の状態は置き換わります。よろしいですか？`)) return;
+    try {
+      localStorage.setItem(FILE_KEYS.exterior, JSON.stringify(data.exterior));
+      if (data.interior) localStorage.setItem(FILE_KEYS.interior, JSON.stringify(data.interior)); else localStorage.removeItem(FILE_KEYS.interior);
+      localStorage.setItem(FILE_KEYS.appMode, data.appMode === 'interior' ? 'interior' : 'exterior');
+    } catch (err) { alert('ブラウザに保存できませんでした（プライベートモードなどでは使えません）。'); return; }
+    history.replaceState(null, '', location.pathname + location.search + (data.appMode === 'interior' ? '#interior' : ''));
+    location.reload();
+  });
+  document.addEventListener('click', e => { const m = $('#fileMenu'); if (m.open && !m.contains(e.target)) m.open = false; });
   $('#appMode').addEventListener('click', e => { const b = e.target.closest('[data-app]'); if (b) setAppMode(b.dataset.app); });
   window.addEventListener('hashchange', () => setAppMode(location.hash === '#interior' ? 'interior' : 'exterior', true));
   $('#gateChk').addEventListener('change', e => setState(st => { st.gateOn = e.target.checked; }));
