@@ -486,7 +486,7 @@ details.in-fl>.colors{margin-top:8px}
     <div class="sheet-h"><h2 id="helpTitle">使い方</h2><button type="button" class="btn small" id="closeHelp">閉じる</button></div>
     <ol class="steps">
       <li><b>塗る場所を選ぶ</b>「外壁」の <em>3階・バルコニー内・2階・1階・ガレージ</em> から1つタップ。パースの壁を直接タップしても選べます。「バルコニー内」は3階インナーバルコニーの奥の壁と左右の壁です。</li>
-      <li><b>外壁材を選ぶ</b>下の一覧から材をタップ。検索欄に<em>品番や色名</em>（例：AH5935、シルク）を入れるか、<em>シリーズ</em>と<em>色の系統</em>で絞り込めます。全部の階を同じ材にするときは「この材を1〜3階すべてに」（バルコニー内も含みます）。縦張りできる柄は「縦張りで表示する」で向きを変えられます。</li>
+      <li><b>外壁材を選ぶ</b>下の一覧から材をタップ。検索欄に<em>品番や色名</em>（例：AH5935、シルク）を入れるか、<em>シリーズ</em>と<em>色の系統</em>で絞り込めます。全部の階を同じ材にするときは「この材を1〜3階すべてに」（バルコニー内は除きます）。縦張りできる柄は「縦張りで表示する」で向きを変えられます。</li>
       <li><b>窓枠・軒天・屋根・ドア・門柱</b>色の丸をタップ。玄関ドアはYKK AP ヴェナートD30のデザインを選んだあと、そのデザインのカラーから色を選びます。門柱は「門柱を表示する」で出し入れできます。虹色の丸を押すと好きな色を指定できます。屋根は片流れ／寄棟を切り替えられます。</li>
       <li><b>2案を比べる</b>「1画面 A」「1画面 B」でどちらか一方を大きく表示・編集できます。「2画面で比較」を押すと A・B が並びます。「編集中」でどちらを変えるか選び、「A の内容を B にコピー」で叩き台を作ると早いです。</li>
       <li><b>見る角度を変える</b>指1本で回転、2本指でズーム・移動。視点ボタンで正面・側面・鳥瞰に切り替え。2画面は視点が連動します。</li>
@@ -1607,7 +1607,7 @@ function bindUI() {
   $('#wallGrid').addEventListener('click', e => { const b = e.target.closest('[data-prod]'); if (b) setState(st => { st[S.zone] = b.dataset.prod; }); });
   // 折り畳みの開閉を覚える（検索中・絞り込み中に開いて見せているときは保存しない）
   $('#wallGrid').addEventListener('toggle', e => { const d = e.target; if (!d.matches?.('details.ser') || QUERY.trim() || S.filter !== 'all') return; S.serOpen = { ...S.serOpen, [d.dataset.ser]: d.open }; save(); }, true);
-  $('#applyFloors').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = st.balc = p; }));
+  $('#applyFloors').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = p; }));
   $('#applyAll').addEventListener('click', () => setState(st => { const p = st[S.zone]; st.f1 = st.f2 = st.f3 = st.balc = st.garage = p; }));
   $('#panel').addEventListener('click', e => { const c = e.target.closest('button.chip'); if (c) setState(st => { st[c.dataset.cat] = c.dataset.val; if (c.dataset.cat === 'door') st.doorDesign = null; }); });
   $('#doorGrid').addEventListener('click', e => { const b = e.target.closest('[data-door]'); if (b) setState(st => { const d = doorById(b.dataset.door); st.doorColor = doorShown(d, doorPick(st))[0]; st.doorDesign = d.id; }); });
