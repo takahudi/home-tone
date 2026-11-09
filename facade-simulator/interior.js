@@ -20,7 +20,7 @@ const ROOMS = [
       { k: 'shelf', a: [6.42, 0.6], b: [7.22, 0.6], name: 'パントリー（扉なし・可動棚）', depth: 0.52 },
     ],
     fixed: [
-      { type: 'island', x: 5.91, z: 2.0, rot: 0 },
+      { type: 'island', x: 5.91, z: 2.0, rot: 0 }, // 東の端（コンロ側）を東の壁に付けた壁付けフラット
       { type: 'backcounter', x: 5.34, z: 0.33, rot: 0 },
       { type: 'fridge', x: 3.99, z: 0.344, rot: 0 }, // 幅60×奥行64.8×高さ185cm、北の壁から2cm
     ] },
@@ -124,6 +124,9 @@ const KDOORS = [
 // 天板：人造大理石「テノール」カウンター（Grade 5）
 const KTOPS = [['tenor-white', 'ソルティホワイト', '#f1f3ec'], ['tenor-gray', 'メテオダークグレー', '#575550'], ['tenor-brown', 'バーストブラウン', '#665246'], ['tenor-black', 'アイアンブラック', '#313230']]
   .map(([id, name, hex]) => ({ id, name: `テノール ${name}`, hex, img: `interior/kitchen/${id}.jpg`, mpp: 0.2 / 612 }));
+// レンジフード：トクラス サイドフード SHVR の3色（トクラス コラージア スリムフラットW のカラーシミュレーションより）
+const RHOOD = [['shvr1', 'シルバー', '#c9cccd', 0.35, 0.3], ['shvr2', 'ブラック', '#2b2c2e', 0.3, 0.4], ['shvr3', 'ホワイト', '#f2f2ef', 0, 0.35]]
+  .map(([id, name, hex, metal, rough]) => ({ id, name: `サイドフード SHVR ${name}`, short: name, hex, metal, rough }));
 const KDOOR_ALIAS = { white: 's-silk', natural: 'n-oak', walnut: 'n-walnut', black: 'q-dark', gray: 'z-mortar' }; // 旧来の色指定からの置き換え
 const kdoorOf = id => colorOf(KDOORS, KDOOR_ALIAS[id] || id);
 // 色見本の画像を、面の実寸（w×h m）に合わせて貼る（継ぎ目が目立たないよう反転しながら繰り返す）
@@ -190,7 +193,7 @@ const CAT = {
   tv: { g: 'e', name: 'TV端子＋コンセント', h0: 0.25 },
   lan: { g: 'e', name: 'LAN（情報コンセント）', h0: 0.25 },
   aircon: { g: 'e', name: 'エアコン', h0: CH - 0.07 - 0.29, fixedH: true },
-  island: { g: 'k', name: 'キッチン（アイランド）', w: 2.58, d: 0.9, h: 0.85, kit: true },
+  island: { g: 'k', name: 'キッチン（スリムフラット）', w: 2.58, d: 0.9, h: 0.85, kit: true },
   backcounter: { g: 'k', name: 'カップボード', w: 2.0, d: 0.65, h: 2.1, kit: true },
   fridge: { g: 'k', name: '冷蔵庫（Panasonic NR-E45RY3）', w: 0.6, d: 0.648, h: 1.85, colors: FRIDGE, def: 'S' },
 };
@@ -337,6 +340,47 @@ const MAT = {
   sheet: std({ color: '#f2f0ea', roughness: 0.9 }),
   steel: std({ color: '#c9ccce', roughness: 0.35, metalness: 0.6 }),
 };
+// キッチン：トクラス コラージア スリムフラットW の形。作業側は -z、+x 端（東）がコンロ側で、そこに床から天井までのキッチンパネルと
+// パネルに付くサイドフードを置く。+x 端から コンロ下（グリル＋引き出し2段）75cm／食洗機45cm／シンク下（引き出し3段）90cm／残りは引き出し3段
+function kitchenModel(g, c, it) {
+  const kd = kdoorOf(it.color), kt = colorOf(KTOPS, it.top), hd = colorOf(RHOOD, it.hood), r = kd.gloss ? 0.18 : 0.55, seam = MAT.black;
+  const tt = 0.02, bh = c.h - tt, pt = 0.02, x1 = c.w / 2 - pt, fz = -c.d / 2 - 0.003; // 薄い天板（2cm）、パネル厚2cm
+  const kick = std({ color: '#3a3a3a', roughness: 0.7 }), panel = std({ color: '#f4f4f1', roughness: 0.25 });
+  const hood = std({ color: hd.hex, roughness: hd.rough, metalness: hd.metal });
+  const bw = c.w - pt, bx = -pt / 2; // 本体（パネルの分だけ短い）
+  box(g, bw - 0.01, 0.08, c.d - 0.07, bx, 0.04, 0.03, kick); // 台輪：作業側だけ下がっている
+  box(g, bw, bh - 0.08, c.d, bx, 0.08 + (bh - 0.08) / 2, 0, swatchMat(kd, bw, bh - 0.08, r));
+  box(g, bw + 0.005, tt, c.d + 0.01, bx, bh + tt / 2, 0, swatchMat(kt, c.w, c.d, 0.35));
+  box(g, pt, CH - 0.002, c.d + 0.01, x1 + pt / 2, CH / 2, 0, panel); // キッチンパネル（床から天井まで）
+  // 前板の割り付け（+x 端から）
+  const xa = x1 - 0.75, xb = xa - 0.45, xc = xb - 0.9, x0 = -c.w / 2, top = bh - 0.01;
+  const vline = x => box(g, 0.004, bh - 0.1, 0.01, x, 0.09 + (bh - 0.1) / 2, fz, seam, false);
+  const hline = (l, r2, y) => box(g, r2 - l - 0.006, 0.004, 0.01, (l + r2) / 2, y, fz, seam, false);
+  const handle = std({ color: '#d4d6d8', roughness: 0.3, metalness: 0.3 });
+  const bar = (l, r2, y) => box(g, r2 - l - 0.08, 0.012, 0.02, (l + r2) / 2, y, fz - 0.01, handle, false); // ロングバー取手
+  [xa, xb, xc].forEach(vline);
+  // コンロ下：上にグリル・操作部、引き出し2段
+  box(g, 0.74, 0.13, 0.012, (xa + x1) / 2, top - 0.075, fz - 0.003, MAT.steel, false);
+  box(g, 0.34, 0.07, 0.006, xa + 0.22, top - 0.075, fz - 0.01, MAT.screen, false);
+  hline(xa, x1, top - 0.15); hline(xa, x1, 0.39);
+  bar(xa, x1, top - 0.18); bar(xa, x1, 0.36);
+  // 食洗機：1枚扉＋上部の操作部
+  box(g, 0.44, 0.04, 0.012, (xb + xa) / 2, top - 0.02, fz - 0.003, MAT.steel, false);
+  // シンク下・残りの列：引き出し3段
+  for (const [l, r2] of [[xc, xb], [x0, xc]]) { hline(l, r2, 0.33); hline(l, r2, 0.58); for (const y of [top - 0.03, 0.55, 0.3]) bar(l, r2, y); }
+  // コンロ（3口）・シンク・水栓
+  const cx = (xa + x1) / 2, sx = (xc + xb) / 2;
+  box(g, 0.6, 0.008, 0.5, cx, c.h + 0.004, -0.1, MAT.screen);
+  for (const [dx, dz] of [[-0.17, -0.12], [0.17, -0.12], [0, 0.1]]) cyl(g, 0.06, 0.06, 0.01, cx + dx, c.h + 0.01, -0.1 + dz, MAT.black);
+  box(g, 0.75, 0.01, 0.45, sx, c.h + 0.001, -0.08, MAT.steel);
+  cyl(g, 0.012, 0.012, 0.3, sx, c.h + 0.15, 0.2, MAT.metal); box(g, 0.02, 0.02, 0.2, sx, c.h + 0.29, 0.11, MAT.metal);
+  // オイルガード（コンロのダイニング側の縁に立つガラス）
+  box(g, 0.7, 0.26, 0.008, x1 - 0.36, c.h + 0.13, c.d / 2 - 0.03, std({ color: '#dfeeee', roughness: 0.05, transparent: true, opacity: 0.25 }), false);
+  // サイドフード SHVR：パネルに付く薄い整流板＋天井までの四角い幕板
+  const hy = 1.65, hz = -0.12;
+  box(g, 0.9, 0.025, 0.6, x1 - 0.45, hy + 0.0125, hz, hood);
+  box(g, 0.36, CH - hy - 0.025, 0.3, x1 - 0.24, (CH + hy + 0.025) / 2, hz - 0.06, hood);
+}
 function buildItem(it, lightCol) {
   const c = CAT[it.type], g = new THREE.Group(), main = c.colors ? std({ color: colorOf(c.colors, it.color || c.def).hex, roughness: c.colors === FABRIC ? 0.95 : 0.6 }) : null;
   const legW = std({ color: '#5f4331', roughness: 0.6 });
@@ -390,24 +434,19 @@ function buildItem(it, lightCol) {
       break;
     case 'rug': { const m = box(g, c.w, 0.012, c.d, 0, 0.006, 0, main, false); m.receiveShadow = true; break; }
     case 'plant': cyl(g, 0.17, 0.13, 0.32, 0, 0.16, 0, MAT.pot); { const r = rng(9); for (let k = 0; k < 9; k++) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16 + r() * 0.08, 0), MAT.leaf); m.position.set((r() - 0.5) * 0.3, 0.6 + r() * 0.65, (r() - 0.5) * 0.3); m.castShadow = true; g.add(m); } } break;
-    case 'island': case 'backcounter': {
+    case 'island': kitchenModel(g, c, it); break;
+    case 'backcounter': {
       // 扉・本体は同じ扉色、天板はカウンターカラー。扉の割り付け（目地）は手前（+z）側
       const kd = kdoorOf(it.color), kt = colorOf(KTOPS, it.top), r = kd.gloss ? 0.18 : 0.55, bh = 0.85 - 0.03, seam = MAT.black;
       const kick = std({ color: '#3a3a3a', roughness: 0.7 });
-      box(g, c.w - 0.02, 0.08, c.d - 0.08, 0, 0.04, it.type === 'island' ? 0 : -0.04, kick);
+      box(g, c.w - 0.02, 0.08, c.d - 0.08, 0, 0.04, -0.04, kick);
       box(g, c.w, bh - 0.08, c.d, 0, 0.08 + (bh - 0.08) / 2, 0, swatchMat(kd, c.w, bh - 0.08, r));
-      const n = Math.max(2, Math.round(c.w / 0.6)), fz = it.type === 'island' ? -1 : 1; // アイランドは作業側（カップボード側）に扉
-      for (let k = 1; k < n; k++) box(g, 0.004, bh - 0.1, 0.01, -c.w / 2 + k * c.w / n, 0.09 + (bh - 0.1) / 2, fz * (c.d / 2 + 0.003), seam, false);
-      for (const y of [0.42, 0.64]) box(g, c.w - 0.01, 0.004, 0.01, 0, y, fz * (c.d / 2 + 0.003), seam, false);
-      if (it.type === 'island') {
-        box(g, c.w + 0.02, 0.03, c.d + 0.02, 0, bh + 0.015, 0, swatchMat(kt, c.w + 0.02, c.d + 0.02, 0.35));
-        box(g, 0.75, 0.01, 0.45, -0.55, c.h + 0.001, -0.1, MAT.steel); cyl(g, 0.012, 0.012, 0.3, -0.55, c.h + 0.15, -0.38, MAT.metal);
-        box(g, 0.6, 0.008, 0.5, 0.8, c.h + 0.004, -0.05, MAT.screen);
-      } else {
-        box(g, c.w, 0.03, c.d, 0, bh + 0.015, 0, swatchMat(kt, c.w, c.d, 0.35));
-        box(g, c.w, 0.7, 0.38, 0, 1.75, -c.d / 2 + 0.19, swatchMat(kd, c.w, 0.7, r));
-        for (let k = 1; k < 4; k++) box(g, 0.004, 0.68, 0.01, -c.w / 2 + k * c.w / 4, 1.75, -c.d / 2 + 0.385, seam, false);
-      }
+      const n = Math.max(2, Math.round(c.w / 0.6));
+      for (let k = 1; k < n; k++) box(g, 0.004, bh - 0.1, 0.01, -c.w / 2 + k * c.w / n, 0.09 + (bh - 0.1) / 2, c.d / 2 + 0.003, seam, false);
+      for (const y of [0.42, 0.64]) box(g, c.w - 0.01, 0.004, 0.01, 0, y, c.d / 2 + 0.003, seam, false);
+      box(g, c.w, 0.03, c.d, 0, bh + 0.015, 0, swatchMat(kt, c.w, c.d, 0.35));
+      box(g, c.w, 0.7, 0.38, 0, 1.75, -c.d / 2 + 0.19, swatchMat(kd, c.w, 0.7, r));
+      for (let k = 1; k < 4; k++) box(g, 0.004, 0.68, 0.01, -c.w / 2 + k * c.w / 4, 1.75, -c.d / 2 + 0.385, seam, false);
       break; }
     case 'fridge': { // NR-E45RY3：上から 冷蔵室（1枚扉）／小さい引き出し2つ（左右）／引き出し2段
       const f = colorOf(FRIDGE, it.color), silver = f.id === 'S';
@@ -617,7 +656,7 @@ export function createInterior(root, { onPlan } = {}) {
         }
       }
       // 家具・器具
-      for (const f of room.fixed || []) addObj({ ...f, fixed: true, color: rs.kitchen && rs.kitchen[f.type], top: rs.kitchenTop && rs.kitchenTop[f.type] });
+      for (const f of room.fixed || []) addObj({ ...f, fixed: true, color: rs.kitchen && rs.kitchen[f.type], top: rs.kitchenTop && rs.kitchenTop[f.type], hood: rs.kitchen && rs.kitchen.hood });
       rs.items.forEach(it => addObj(it));
       applyMats(); applyTime(); renderCount(); cull();
     }
@@ -848,17 +887,21 @@ export function createInterior(root, { onPlan } = {}) {
     return `<div class="in-kit"><div class="in-kit-h">扉・本体<span>${kdoorOf(cd).series}シリーズ ${kdoorOf(cd).name}</span></div>
       ${KDOOR_SERIES.map(([k, label, note]) => `<div class="in-kser"><small>${label}（${note}）</small><div class="colors">${KDOORS.filter(o => o.series === k).map(o => kchip(type, 'door', o, cd, `${label} ${o.name}`)).join('')}</div></div>`).join('')}
       <div class="in-kit-h">天板<span>${colorOf(KTOPS, ct).name}</span></div>
-      <div class="colors">${KTOPS.map(o => kchip(type, 'top', o, ct, o.name)).join('')}</div></div>`;
+      <div class="colors">${KTOPS.map(o => kchip(type, 'top', o, ct, o.name)).join('')}</div>
+      ${type === 'island' ? `<div class="in-kit-h">レンジフード<span>${hoodOf().name}</span></div>
+      <div class="seg">${RHOOD.map(o => `<button type="button" data-kt="hood" data-kp="door" data-kc="${o.id}" aria-pressed="${hoodOf().id === o.id}">${o.short}</button>`).join('')}</div>` : ''}</div>`;
   }
+  const hoodOf = (rs = curRs()) => colorOf(RHOOD, rs.kitchen && rs.kitchen.hood);
   function setKitchen(type, part, id) {
     const v = V(), rs = v.rs, key = part === 'top' ? 'kitchenTop' : 'kitchen'; rs[key] = rs[key] || {}; rs[key][type] = id;
-    const old = v.itemObjs.find(o => o.userData.item.fixed && o.userData.item.type === type);
-    if (old) { const it = old.userData.item; if (part === 'top') it.top = id; else it.color = id; v.replaceObj(old, it); }
+    const owner = type === 'hood' ? 'island' : type; // レンジフードはキッチンの一部として作り直す
+    const old = v.itemObjs.find(o => o.userData.item.fixed && o.userData.item.type === owner);
+    if (old) { const it = old.userData.item; if (type === 'hood') it.hood = id; else if (part === 'top') it.top = id; else it.color = id; v.replaceObj(old, it); }
     save(); v.dirty = true; showSel(); renderPanel();
   }
   const kitOpen = new Set();
   $('#inBody').addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.ksec; if (k) { if (e.target.open) kitOpen.add(k); else kitOpen.delete(k); } }, true);
-  const kitDesc = (type, rs = curRs()) => `扉 ${kdoorOf(rs.kitchen && rs.kitchen[type]).name}・天板 ${colorOf(KTOPS, rs.kitchenTop && rs.kitchenTop[type]).name}`;
+  const kitDesc = (type, rs = curRs()) => `扉 ${kdoorOf(rs.kitchen && rs.kitchen[type]).name}・天板 ${colorOf(KTOPS, rs.kitchenTop && rs.kitchenTop[type]).name}${type === 'island' ? `・レンジフード ${hoodOf(rs).short}` : ''}`;
 
   // ---- パネル ----
   const sw = (list, cur, attr) => `<div class="colors">${list.map(o => `<button type="button" class="chip${o.tex ? ' tx' : ''}" ${attr}="${o.id}" aria-pressed="${cur === o.id}" title="${o.name}" aria-label="${o.name}" style="background:${o.hex}"></button>`).join('')}</div>`;
@@ -889,7 +932,7 @@ export function createInterior(root, { onPlan } = {}) {
           <div class="colors">${list.map(o => `<button type="button" class="chip" data-door="${o.id}" aria-pressed="${cur === o.id}" title="${doorLabel(o)}" aria-label="${doorLabel(o)}" style="background:${o.hex} url(${o.img}) center/cover"></button>`).join('')}</div></details>`; }).join('')}
         <div class="in-dopt"><span>枠</span><div class="seg">${DFRAME.map(o => `<button type="button" data-dframe="${o.id}" aria-pressed="${colorOf(DFRAME, rs.doorFrame).id === o.id}">${o.name}</button>`).join('')}</div>
         <span>ハンドル</span><div class="seg">${DKNOB.map(o => `<button type="button" data-dknob="${o.id}" aria-pressed="${colorOf(DKNOB, rs.doorKnob).id === o.id}">${o.name}</button>`).join('')}</div></div></section>
-      ${(room.fixed || []).filter(f => CAT[f.type].kit).map(f => `<details class="in-fl in-kitsec" data-ksec="${f.type}"${kitOpen.has(f.type) ? ' open' : ''}><summary><b>${CAT[f.type].name.replace('（アイランド）', '')}</b><span>${kitDesc(f.type)}</span></summary>${kitChips(f.type)}</details>`).join('')}
+      ${(room.fixed || []).filter(f => CAT[f.type].kit).map(f => `<details class="in-fl in-kitsec" data-ksec="${f.type}"${kitOpen.has(f.type) ? ' open' : ''}><summary><b>${CAT[f.type].name.replace(/（.*）/, '')}</b><span>${kitDesc(f.type)}</span></summary>${kitChips(f.type)}</details>`).join('')}
       ${(room.fixed || []).some(f => f.type === 'fridge') ? `<div class="in-dopt"><span>冷蔵庫</span><small class="note">Panasonic NR-E45RY3</small><div class="seg">${FRIDGE.map(o => `<button type="button" data-kt="fridge" data-kp="door" data-kc="${o.id}" aria-pressed="${colorOf(FRIDGE, rs.kitchen && rs.kitchen.fridge).id === o.id}">${o.short}</button>`).join('')}</div></div>` : ''}
       <button type="button" class="btn small" id="copyAll">この部屋の壁紙・床・天井・ドアを全部屋に反映（プラン${state.edit}）</button>`;
     } else {
@@ -977,7 +1020,7 @@ export function createInterior(root, { onPlan } = {}) {
         const lines = [`壁紙：${colorOf(WALLPAPER, rs.wall).name}${rs.accent.on ? `／アクセント：${colorOf(WALLPAPER, rs.accent.color).name}（${wallName(rs.accent.wall)}）` : ''}`,
           `天井：${colorOf(WALLPAPER, rs.ceiling).name}／床：${floorLabel(colorOf(FLOORS, rs.floor))}`,
           `室内ドア：${doorLabel(doorOf(rs.door))}・枠${colorOf(DFRAME, rs.doorFrame).name}・ハンドル${colorOf(DKNOB, rs.doorKnob).name}／照明色：${colorOf(LIGHTCOL, rs.lightCol).name}`,
-          ...(room.fixed || []).filter(f => CAT[f.type].kit).map(f => `${CAT[f.type].name.replace('（アイランド）', '')}：${kitDesc(f.type, rs)}`),
+          ...(room.fixed || []).filter(f => CAT[f.type].kit).map(f => `${CAT[f.type].name.replace(/（.*）/, '')}：${kitDesc(f.type, rs)}`),
           ...((room.fixed || []).some(f => f.type === 'fridge') ? [`冷蔵庫：${colorOf(FRIDGE, rs.kitchen && rs.kitchen.fridge).name}`] : []),
           countText(rs)];
         return { s, img: cp, lines };
