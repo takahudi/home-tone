@@ -1514,7 +1514,7 @@ function renderDetail() {
 }
 function chipStyle(o) { if (o.match) { const r = opt('roof', cur().roof); return `background:linear-gradient(135deg, ${r.hex} 0 50%, var(--surface) 50% 100%)`; } return o.img ? `background:${o.hex} url(${o.img}) center/cover` : o.wood ? `background-image:url(${thumb(wallById(o.wood)).url})` : `background:${o.hex}`; }
 function renderColors() {
-  for (const box of document.querySelectorAll('.colors')) {
+  for (const box of document.querySelectorAll('.colors[data-cat]')) { // 内観パネルの .colors は対象外
     const cat = box.dataset.cat, val = cur()[cat], isCustom = typeof val === 'string' && val.startsWith('#');
     box.innerHTML = OPTIONS[cat].map(o => `<button type="button" class="chip" data-cat="${cat}" data-val="${o.id}" aria-pressed="${val === o.id}" title="${esc(o.name)}" aria-label="${esc(o.name)}" style="${chipStyle(o)}"></button>`).join('')
       + `<label class="chip custom" title="好きな色を指定" aria-pressed="${isCustom}" ${isCustom ? `style="background:${val}"` : ''}><input type="color" id="custom-${cat}" data-cat="${cat}" value="${isCustom ? val : '#888888'}" aria-label="${CAT_LABEL[cat]}の色を指定"></label>`;
