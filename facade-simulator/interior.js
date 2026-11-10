@@ -579,6 +579,7 @@ export function createInterior(root, { onPlan } = {}) {
       </div>
       <div class="seg" id="inEditSeg" aria-label="家具・器具の配置"><button type="button" data-ed="0" aria-pressed="true">配置を固定</button><button type="button" data-ed="1" aria-pressed="false">編集モード</button></div>
       <div class="seg" id="inTime"><button type="button" data-t="day" aria-pressed="true">昼</button><button type="button" data-t="night" aria-pressed="false">夜</button></div>
+      <label class="check" id="inDayLitWrap" title="昼の画面でも照明を点けて、照明の色（電球色・温白色・昼白色）の違いを見る"><input type="checkbox" id="inDayLit"> 昼も照明を点ける</label>
       <label class="in-bright" title="画面の明るさ（標準 90%）">明るさ <input type="range" id="inBright" min="60" max="130" step="5" aria-label="明るさ"><output id="inBrightV"></output></label>
       <label class="check" id="inSyncWrap"><input type="checkbox" id="inSync"> 2画面の視点を連動</label>
     </div>
@@ -781,13 +782,14 @@ export function createInterior(root, { onPlan } = {}) {
       }).catch(() => {});
     }
     function applyTime() {
-      const n = state.night, lc = colorOf(LIGHTCOL, rs.lightCol);
+      const n = state.night, lit = n || !!state.dayLights, lc = colorOf(LIGHTCOL, rs.lightCol);
       // 昼：three.js の物理ベースの光は強さ1で色の約1/π の明るさになるため、白い壁が白く見えるよう間接光（全方向から均等な光）を強めにし、床が明るく飛ばないよう上からの光は控えめにしている
-      hemi.intensity = n ? 0.04 : 0.9; sun.intensity = n ? 0 : 0.5; amb.intensity = n ? 0.03 : 2.4;
+      // 昼に照明を点けたときは、照明の分だけ全体が明るくなりすぎないよう間接光を少し弱め、照明も夜より控えめにする（色温度の違いは見えるようにする）
+      hemi.intensity = n ? 0.04 : 0.9; sun.intensity = n ? 0 : 0.5; amb.intensity = n ? 0.03 : lit ? 1.7 : 2.4;
       scene.background = new THREE.Color(n ? '#1b1f26' : '#e9ecef'); ground.material.color.set(n ? '#2a2c30' : '#d7d5d0');
       mats.glass.emissive.set(n ? '#1d2735' : '#bcd9f0'); mats.glass.emissiveIntensity = n ? 0.6 : 0.7; mats.glass.color.set(n ? '#2c3646' : '#cfe3f2');
-      for (const pl of lightObjs) { pl.intensity = n ? pl.userData.lm : 0; pl.color.set(lc.hex); }
-      for (const o of itemObjs) o.traverse(m => { if (m.userData.glow) { m.material.emissive.set(lc.hex); m.material.emissiveIntensity = n ? 2.2 : 0.15; } });
+      for (const pl of lightObjs) { pl.intensity = n ? pl.userData.lm : lit ? pl.userData.lm * 0.7 : 0; pl.color.set(lc.hex); }
+      for (const o of itemObjs) o.traverse(m => { if (m.userData.glow) { m.material.emissive.set(lc.hex); m.material.emissiveIntensity = lit ? 2.2 : 0.15; } });
       renderer.toneMappingExposure = (state.bright ?? 90) / 100; // 明るさ（昼・夜とも全体に効く）
       v.dirty = true;
     }
@@ -977,6 +979,7 @@ export function createInterior(root, { onPlan } = {}) {
     for (const b of root.querySelectorAll('#inTabs button')) b.setAttribute('aria-pressed', b.dataset.tab === state.tab);
     $('#inRoom').value = room.id;
     for (const b of root.querySelectorAll('#inTime button')) b.setAttribute('aria-pressed', (b.dataset.t === 'night') === !!state.night);
+    $('#inDayLit').checked = !!state.dayLights; $('#inDayLit').disabled = !!state.night; // 夜は常に点灯
     for (const b of root.querySelectorAll('#inEditSeg button')) b.setAttribute('aria-pressed', (b.dataset.ed === '1') === editing);
     stageEl.classList.toggle('editing', editing);
     $('#inHint').textContent = editing ? '編集モード：家具や器具をドラッグで移動。何もない所のドラッグで回転' : 'ドラッグで回転・ホイール／2本指で拡大。クリックで選択して色を変更';
@@ -1059,6 +1062,7 @@ export function createInterior(root, { onPlan } = {}) {
     r.addEventListener('input', () => { state.bright = +r.value; show(); applyTimeAll(); });
     r.addEventListener('change', save);
     r.addEventListener('dblclick', () => { state.bright = 90; r.value = 90; show(); applyTimeAll(); save(); }); }
+  $('#inDayLit').addEventListener('change', e => { state.dayLights = e.target.checked; save(); applyTimeAll(); });
   $('#inTime').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (b) { state.night = b.dataset.t === 'night'; save(); applyTimeAll(); renderPanel(); } });
   $('#inEdit').addEventListener('click', e => { const t = e.target.closest('[data-pedit]'); if (t) setEdit(t.dataset.pedit); });
   $('#inCopy').addEventListener('click', () => {
