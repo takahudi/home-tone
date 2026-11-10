@@ -472,7 +472,7 @@ function buildItem(it, lightCol) {
       // ハイカウンタータイプ用キャビネット（H1025・D450）：西に4段引出し W900、東に家電送風機オープンタイプ W900。
       // 上にウォールキャビネット（W900 の両開き×2、H600・D450、天井から5cm下）。カウンターとの間から北の小窓が見える
       const kd = kdoorOf(it.color), kt = colorOf(CB_TOPS, it.top), r = kd.gloss ? 0.18 : 0.55, seam = MAT.black;
-      const handle = optMat(colorOf(KHANDLE, it.handle)), gray = std({ color: '#9a9b9b', roughness: 0.6 }), kick = std({ color: '#3a3a3a', roughness: 0.7 });
+      const handle = optMat(colorOf(KHANDLE, it.cbHandle || it.handle)), gray = std({ color: '#9a9b9b', roughness: 0.6 }), kick = std({ color: '#3a3a3a', roughness: 0.7 });
       const tt = 0.03, bh = 1.025 - tt, kh = 0.07, fz = c.d / 2 + 0.003, bk = -c.d / 2;
       const hline = (l, r2, y, z = fz) => box(g, r2 - l - 0.006, 0.004, 0.01, (l + r2) / 2, y, z, seam, false);
       const vline = (x, y0, y1, z = fz) => box(g, 0.004, y1 - y0, 0.01, x, (y0 + y1) / 2, z, seam, false);
@@ -723,7 +723,7 @@ export function createInterior(root, { onPlan } = {}) {
         }
       }
       // 家具・器具
-      for (const f of room.fixed || []) addObj({ ...f, fixed: true, color: rs.kitchen && rs.kitchen[f.type], top: rs.kitchenTop && rs.kitchenTop[f.type], ...Object.fromEntries(KOPTS.map(([k]) => [k, rs.kitchen && rs.kitchen[k]])) });
+      for (const f of room.fixed || []) addObj({ ...f, fixed: true, color: rs.kitchen && rs.kitchen[f.type], top: rs.kitchenTop && rs.kitchenTop[f.type], ...Object.fromEntries(KOPTS.map(([k]) => [k, rs.kitchen && rs.kitchen[k]])), cbHandle: rs.kitchen && rs.kitchen.cbHandle });
       rs.items.forEach(it => addObj(it));
       applyMats(); applyTime(); renderCount(); cull();
     }
@@ -958,19 +958,26 @@ export function createInterior(root, { onPlan } = {}) {
       <div class="colors">${topsOf(type).map(o => kchip(type, 'top', o, ct, o.name)).join('')}</div>
       ${type === 'island' ? KOPTS.map(([k, label, list]) => { const cur = optOf(k); return `<div class="in-kit-h">${label}<span>${cur.name}</span></div>
       ${k === 'sink' ? `<div class="colors">${list.map(o => `<button type="button" class="chip" data-kt="${k}" data-kp="door" data-kc="${o.id}" aria-pressed="${cur.id === o.id}" title="${o.name}" aria-label="${o.name}" style="background:${o.hex}"></button>`).join('')}</div>`
-        : `<div class="seg">${list.map(o => `<button type="button" data-kt="${k}" data-kp="door" data-kc="${o.id}" aria-pressed="${cur.id === o.id}">${o.short}</button>`).join('')}</div>`}`; }).join('') : ''}</div>`;
+        : `<div class="seg">${list.map(o => `<button type="button" data-kt="${k}" data-kp="door" data-kc="${o.id}" aria-pressed="${cur.id === o.id}">${o.short}</button>`).join('')}</div>`}`; }).join('') : ''}
+      ${type === 'backcounter' ? (() => { const cur = cbHandleOf(); return `<div class="in-kit-h">取っ手<span>${cur.name}</span></div>
+      <div class="seg">${KHANDLE.map(o => `<button type="button" data-kt="cbHandle" data-kp="door" data-kc="${o.id}" aria-pressed="${cur.id === o.id}">${o.short}</button>`).join('')}</div>`; })() : ''}</div>`;
   }
+  // カップボードの取っ手：選ぶまではキッチンの取っ手と同じ色
+  const cbHandleOf = (rs = curRs()) => colorOf(KHANDLE, rs.kitchen && (rs.kitchen.cbHandle || rs.kitchen.handle));
   const optOf = (k, rs = curRs()) => colorOf(KOPTS.find(o => o[0] === k)[2], rs.kitchen && rs.kitchen[k]);
   function setKitchen(type, part, id) {
     const v = V(), rs = v.rs, key = part === 'top' ? 'kitchenTop' : 'kitchen'; rs[key] = rs[key] || {}; rs[key][type] = id;
-    const isOpt = KOPTS.some(o => o[0] === type), owner = isOpt ? 'island' : type; // フード・シンク・取っ手はキッチンの一部として作り直す
-    const old = v.itemObjs.find(o => o.userData.item.fixed && o.userData.item.type === owner);
-    if (old) { const it = old.userData.item; if (isOpt) it[type] = id; else if (part === 'top') it.top = id; else it.color = id; v.replaceObj(old, it); }
+    // フード・シンク・取っ手はキッチンの一部として作り直す。キッチンの取っ手は、取っ手を選んでいないカップボードにも効くので両方作り直す
+    const isOpt = KOPTS.some(o => o[0] === type) || type === 'cbHandle';
+    const owners = type === 'cbHandle' ? ['backcounter'] : type === 'handle' ? ['island', 'backcounter'] : isOpt ? ['island'] : [type];
+    for (const old of v.itemObjs.filter(o => o.userData.item.fixed && owners.includes(o.userData.item.type))) {
+      const it = old.userData.item; if (isOpt) it[type] = id; else if (part === 'top') it.top = id; else it.color = id; v.replaceObj(old, it);
+    }
     save(); v.dirty = true; showSel(); renderPanel();
   }
   const kitOpen = new Set();
   $('#inBody').addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.ksec; if (k) { if (e.target.open) kitOpen.add(k); else kitOpen.delete(k); } }, true);
-  const kitDesc = (type, rs = curRs()) => `扉 ${kdoorOf(rs.kitchen && rs.kitchen[type]).name}・天板 ${colorOf(topsOf(type), rs.kitchenTop && rs.kitchenTop[type]).name}${type === 'island' ? KOPTS.map(([k, label]) => `・${label} ${optOf(k, rs).short}`).join('') : ''}`;
+  const kitDesc = (type, rs = curRs()) => `扉 ${kdoorOf(rs.kitchen && rs.kitchen[type]).name}・天板 ${colorOf(topsOf(type), rs.kitchenTop && rs.kitchenTop[type]).name}${type === 'island' ? KOPTS.map(([k, label]) => `・${label} ${optOf(k, rs).short}`).join('') : ''}${type === 'backcounter' ? `・取っ手 ${cbHandleOf(rs).short}` : ''}`;
 
   // ---- パネル ----
   const sw = (list, cur, attr) => `<div class="colors">${list.map(o => `<button type="button" class="chip${o.tex ? ' tx' : ''}" ${attr}="${o.id}" aria-pressed="${cur === o.id}" title="${o.name}" aria-label="${o.name}" style="background:${o.hex}"></button>`).join('')}</div>`;
