@@ -357,6 +357,8 @@ details.in-fl>.colors{margin-top:8px}
         </div>
         <label class="check" id="syncWrap" hidden><input type="checkbox" id="sync" checked> 2画面の視点を連動</label>
         <label class="check"><input type="checkbox" id="legendChk" checked> 凡例</label>
+        <span class="lbl">光</span>
+        <div class="seg" id="lightSeg" role="group" aria-label="光"><button type="button" data-light="warm" aria-pressed="true" title="従来の設定（少し黄みのある日差し）">暖色</button><button type="button" data-light="white" aria-pressed="false" title="日差しを白に">白</button><button type="button" data-light="clear" aria-pressed="false" title="白い日差し＋青空の光を強めに、少し明るく">晴天</button></div>
       </div>
       <div class="stage" id="stage">
         <div class="pane" id="pA" data-side="A">
@@ -1179,7 +1181,7 @@ function buildHouse(roofType) {
    ========================================================= */
 const STORE_KEY = 'kmew-facade-sim-v1';
 const DEFAULT = {
-  mode: 'single', edit: 'A', zone: 'f3', sync: true, roofType: 'mono', legend: true, filter: 'all', fam: 'all', doorTaste: 'all',
+  mode: 'single', edit: 'A', zone: 'f3', sync: true, roofType: 'mono', legend: true, light: 'warm', filter: 'all', fam: 'all', doorTaste: 'all',
   A: { vert: {}, balc: 'AH5935U', f3: 'AH5935U', f2: 'AH5935U', f1: 'AH5935U', garage: 'AH5933U', sash: 'black', soffit: 'YL251', roof: 'black', fascia: 'match', door: 'wood-natural', doorDesign: 'N07N', doorColor: 'PR', gate: 'charcoal', gatePost: 'wood-walnut', gateOn: true },
   B: { vert: {}, balc: 'NH5912', f3: 'AH5933U', f2: 'AH5935U', f1: 'AH5935U', garage: 'NH5912', sash: 'black', soffit: 'black', roof: 'black', fascia: 'match', door: 'black', doorDesign: 'C10N', doorColor: 'K5', gate: 'charcoal', gatePost: 'wood-walnut', gateOn: true },
 };
@@ -1219,6 +1221,13 @@ const prodLabel = p => (p.code ? p.code + ' ' : '') + (p.series ? p.series + ' '
    ビューア
    ========================================================= */
 const SKY = makeSky();
+// 外観の光：日光の色・強さと、空からの光（HemisphereLight）の強さ、全体の明るさ。warm が従来の設定
+const LIGHTS = [
+  { id: 'warm', sun: '#fff4e4', sunI: 2.3, hemi: 0.45, exp: 1.0 },
+  { id: 'white', sun: '#ffffff', sunI: 2.3, hemi: 0.45, exp: 1.0 },
+  { id: 'clear', sun: '#fbfcff', sunI: 2.3, hemi: 0.8, exp: 1.12 },
+];
+const lightOf = id => LIGHTS.find(l => l.id === id) || LIGHTS[0];
 const VIEWS = {
   persp: { pos: [10.5, 1.6, 13.5], tgt: [W / 2 - 0.2, 4.7, -2.2], need: 0.95 },
   nw:    { pos: [-8.5, 1.6, 13.5], tgt: [W / 2 + 0.2, 4.7, -2.2], need: 0.95 },
@@ -1299,12 +1308,14 @@ class Viewer {
     const pm = new THREE.PMREMGenerator(r);
     sc.environment = pm.fromEquirectangular(SKY).texture; sc.environmentIntensity = 0.55; pm.dispose();
     sc.fog = new THREE.Fog('#dfe7ec', 70, 230);
-    const sun = new THREE.DirectionalLight('#fff4e4', 2.3);
+    const sun = this.sun = new THREE.DirectionalLight('#fff4e4', 2.3);
     sun.position.set(W / 2 + 11, 17, 8); sun.target.position.set(W / 2, 0, -D / 2 + 1);
     sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
     Object.assign(sun.shadow.camera, { left: -13, right: 13, top: 13, bottom: -13, near: 1, far: 60 });
     sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
-    sc.add(sun, sun.target, new THREE.HemisphereLight('#d4e3f5', '#958f82', 0.45));
+    this.hemi = new THREE.HemisphereLight('#d4e3f5', '#958f82', 0.45);
+    sc.add(sun, sun.target, this.hemi);
+    this.setLight(S.light);
     buildSite(sc);
     this.cam = new THREE.PerspectiveCamera(36, 1, 0.1, 600);
     const c = this.controls = new OrbitControls(this.cam, r.domElement);
@@ -1324,6 +1335,11 @@ class Viewer {
   resize() {
     const w = this.el.clientWidth, h = this.el.clientHeight; if (!w || !h) return;
     this.renderer.setSize(w, h, false); this.cam.aspect = w / h; this.cam.updateProjectionMatrix(); this.dirty = true;
+  }
+  setLight(id) {
+    const l = lightOf(id);
+    this.sun.color.set(l.sun); this.sun.intensity = l.sunI; this.hemi.intensity = l.hemi; this.renderer.toneMappingExposure = l.exp;
+    this.dirty = true;
   }
   setView(name) {
     const vw = VIEWS[name]; const t = v(...vw.tgt), p = v(...vw.pos);
@@ -1561,6 +1577,7 @@ function refreshUI(full = true) {
   $('#syncWrap').hidden = !cmp;
   $('#sync').checked = S.sync;
   $('#legendChk').checked = S.legend;
+  for (const b of document.querySelectorAll('#lightSeg button')) b.setAttribute('aria-pressed', b.dataset.light === lightOf(S.light).id);
   $('#gateChk').checked = cur().gateOn !== false;
   $('#stage').classList.toggle('compare', cmp);
   $('#stage').classList.toggle('no-legend', !S.legend);
@@ -1595,6 +1612,10 @@ function bindUI() {
   });
   $('#sync').addEventListener('change', e => { S.sync = e.target.checked; if (S.sync) syncFrom(viewers[S.edit]); save(); });
   $('#legendChk').addEventListener('change', e => { S.legend = e.target.checked; refreshUI(); save(); });
+  $('#lightSeg').addEventListener('click', e => {
+    const b = e.target.closest('[data-light]'); if (!b) return;
+    S.light = b.dataset.light; for (const s of ['A', 'B']) viewers[s]?.setLight(S.light); refreshUI(false); save();
+  });
   $('#zones').addEventListener('click', e => { const b = e.target.closest('[data-zone]'); if (b) { S.zone = b.dataset.zone; refreshUI(); save(); } });
   $('#filters').addEventListener('click', e => { const b = e.target.closest('[data-filter]'); if (b) { S.filter = b.dataset.filter; renderFilters(); renderGrid(); save(); } });
   $('#famFilters').addEventListener('click', e => { const b = e.target.closest('[data-fam]'); if (b) { S.fam = b.dataset.fam; renderFilters(); renderGrid(); save(); } });
