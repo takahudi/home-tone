@@ -110,6 +110,9 @@ const FABRIC = [['gray', 'グレー', '#8d8e8c'], ['beige', 'ベージュ', '#c9
   .map(([id, name, hex]) => ({ id, name, hex }));
 const WOODC = [['natural', 'ナチュラル', '#c49a6c'], ['walnut', 'ウォールナット', '#5f4331'], ['white', 'ホワイト', '#efeeea'], ['black', 'ブラック', '#2a2b2d'], ['gray', 'グレー', '#8c8d8c']]
   .map(([id, name, hex]) => ({ id, name, hex }));
+// キッチン・カップボードの扉の色見本を、TOCLAS カラーシミュレーション（スリムフラット-W）の CG の見え方に寄せる補正（sRGB の倍率 R,G,B）。
+// 内観のアイランドを同じ向きから描いた色が CG の扉の平均色に合うように測って決めた
+const KDOOR_TINT = {'z-cream': [0.811, 0.834, 0.821], 'z-mortar': [0.91, 0.949, 0.911], 'z-gray': [0.834, 0.861, 0.89], 'z-gold': [0.948, 1.069, 1.223], 'z-leather': [0.977, 1.024, 1.064], 'y-white': [0.861, 0.855, 0.821], 'y-mocha': [0.762, 0.813, 0.857], 'n-oak': [0.963, 1.046, 1.067], 'n-teak': [0.892, 0.982, 1.067], 'n-walnut': [0.988, 1.141, 1.198], 's-basic': [0.863, 0.867, 0.884], 's-silk': [0.909, 0.921, 0.952], 'd-wine': [0.763, 0.941, 0.849], 'd-navy': [0.933, 0.977, 1.054], 'q-white': [0.874, 0.903, 0.932], 'q-medium': [1.004, 1.147, 1.258], 'q-dark': [1.182, 1.232, 1.213], 'j-oak': [0.902, 0.941, 0.955], 'j-elm': [1.002, 1.045, 1.036], 'b-linen': [0.918, 0.928, 0.908], 'b-ice': [1.019, 1.0, 0.97], 'b-mimosa': [0.966, 1.05, 1.157], 'b-slate': [0.991, 1.001, 1.002]};
 // キッチン・カップボードの扉（本体も同色）：カタログ「扉シリーズ」のリッチマテリアル以外。img はカタログの色見本
 const KDOOR_SERIES = [['Z', 'Zシリーズ', 'Grade 2・石目'], ['Y', 'Yシリーズ', 'Grade 2・木目'], ['N', 'Nシリーズ', 'Grade 2・木目'], ['S', 'Sシリーズ', 'Grade 2・白無地'],
   ['D', 'Dシリーズ', 'Grade 2・鏡面'], ['Q', 'Qシリーズ', 'Grade 2・鏡面木目'], ['J', 'Jシリーズ', 'Grade 1・木目'], ['B', 'Bシリーズ', 'Grade 1・マット']];
@@ -122,7 +125,7 @@ const KDOORS = [
   ['q-white', 'Q', 'グロウホワイト', '#f1e3d1', 1], ['q-medium', 'Q', 'グロウミディアム', '#694a35', 1], ['q-dark', 'Q', 'グロウダーク', '#3d3330', 1],
   ['j-oak', 'J', 'チョークドオーク', '#e8ddc7'], ['j-elm', 'J', 'グレイッシュエルム', '#bfb1a6'],
   ['b-linen', 'B', 'リネンベージュ', '#d4cfcc'], ['b-ice', 'B', 'アイスブルー', '#bdccd1'], ['b-mimosa', 'B', 'ミモザイエロー', '#f4c575'], ['b-slate', 'B', 'スレートグレー', '#6d6d6c'],
-].map(([id, series, name, hex, gloss]) => ({ id, series, name, hex, gloss: !!gloss, img: `interior/kitchen/${id}.jpg`, mpp: 0.4 / 435 }));
+].map(([id, series, name, hex, gloss]) => ({ id, series, name, hex, gloss: !!gloss, img: `interior/kitchen/${id}.jpg`, mpp: 0.4 / 435, tint: KDOOR_TINT[id] }));
 // 天板：人造大理石「テノール」カウンター（Grade 5）
 const KTOPS = [['tenor-white', 'ソルティホワイト', '#f1f3ec'], ['tenor-gray', 'メテオダークグレー', '#575550'], ['tenor-brown', 'バーストブラウン', '#665246'], ['tenor-black', 'アイアンブラック', '#313230']]
   .map(([id, name, hex]) => ({ id, name: `テノール ${name}`, hex, img: `interior/kitchen/${id}.jpg`, mpp: 0.2 / 612 }));
@@ -132,8 +135,8 @@ const topsOf = type => type === 'backcounter' ? CB_TOPS : KTOPS;
 // レンジフード：トクラス サイドフード SHVR の3色（トクラス コラージア スリムフラットW のカラーシミュレーションより）
 const RHOOD = [['shvr1', 'シルバー', '#c9cccd', 0.35, 0.3], ['shvr2', 'ブラック', '#2b2c2e', 0.3, 0.4], ['shvr3', 'ホワイト', '#f2f2ef', 0, 0.35]]
   .map(([id, name, hex, metal, rough]) => ({ id, name: `サイドフード SHVR ${name}`, short: name, hex, metal, rough }));
-// シンク：人造大理石の H2シンク 4色、取っ手：ロングバー取手 2色（同じシミュレーションの色見本から）
-const KSINK = [['w', 'ホワイト', '#dbd5d7'], ['cb', 'シックベージュ', '#b19e8d'], ['gg', 'グレージュ', '#bba489'], ['g', 'グレー', '#b8b2a9']]
+// シンク：人造大理石の H2シンク 4色（色は TOCLAS カラーシミュレーションの CG のシンクの色に合わせた）、取っ手：ロングバー取手 2色（同じシミュレーションの色見本から）
+const KSINK = [['w', 'ホワイト', '#daddde'], ['cb', 'シックベージュ', '#bebab5'], ['gg', 'グレージュ', '#c0beb0'], ['g', 'グレー', '#bcc0c2']]
   .map(([id, name, hex]) => ({ id, name: `H2シンク ${name}`, short: name, hex, metal: 0, rough: 0.3 }));
 const KHANDLE = [['silver', 'シルバー', '#d4d6d8', 0.3, 0.3], ['black', 'ブラック', '#2a2b2d', 0.2, 0.45]]
   .map(([id, name, hex, metal, rough]) => ({ id, name: `ロングバー取手 ${name}`, short: name, hex, metal, rough }));
@@ -151,7 +154,7 @@ function swatchMat(o, w, h, rough) {
   (SWATCH_IMG[o.img] || (SWATCH_IMG[o.img] = new Promise((ok, ng) => { const im = new Image(); im.onload = () => ok(im); im.onerror = ng; im.src = o.img; }))).then(im => {
     const t = new THREE.Texture(im); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping; t.anisotropy = 8;
     t.repeat.set(w / (im.width * o.mpp), h / (im.height * o.mpp)); t.needsUpdate = true;
-    m.map = t; m.color.set('#ffffff'); m.needsUpdate = true; onTexLoad();
+    m.map = t; if (o.tint) m.color.setRGB(...o.tint, THREE.SRGBColorSpace); else m.color.set('#ffffff'); m.needsUpdate = true; onTexLoad();
   }).catch(() => {});
   return m;
 }
