@@ -132,8 +132,11 @@ const KDOORS = [
   ['b-linen', 'B', 'リネンベージュ', '#d4cfcc'], ['b-ice', 'B', 'アイスブルー', '#bdccd1'], ['b-mimosa', 'B', 'ミモザイエロー', '#f4c575'], ['b-slate', 'B', 'スレートグレー', '#6d6d6c'],
 ].map(([id, series, name, hex, gloss]) => ({ id, series, name, hex, gloss: !!gloss, img: `interior/kitchen/${id}.jpg`, mpp: 0.4 / 435, tint: KDOOR_TINT[id] }));
 // 天板：人造大理石「テノール」カウンター（Grade 5）
+// 扉と同じく、TOCLAS カラーシミュレーションの CG の天板の平均色（アイランド・カップボードの2画面の平均）に合うよう補正（sRGB の倍率 R,G,B）。
+// CG では艶のある天板が周りを映すため、濃い色ほど色見本よりかなり明るく、ニュートラルなグレー寄りに見える。内観の俯瞰で描いた天板の色から、トーンマッピング込みで逆算した
+const KTOP_TINT = {'tenor-white': [0.836, 0.834, 0.84], 'tenor-gray': [1.207, 1.256, 1.333], 'tenor-brown': [1.058, 1.092, 1.167], 'tenor-black': [1.766, 1.844, 1.912]};
 const KTOPS = [['tenor-white', 'ソルティホワイト', '#f1f3ec'], ['tenor-gray', 'メテオダークグレー', '#575550'], ['tenor-brown', 'バーストブラウン', '#665246'], ['tenor-black', 'アイアンブラック', '#313230']]
-  .map(([id, name, hex]) => ({ id, name: `テノール ${name}`, hex, img: `interior/kitchen/${id}.jpg`, mpp: 0.2 / 612 }));
+  .map(([id, name, hex]) => ({ id, name: `テノール ${name}`, hex, img: `interior/kitchen/${id}.jpg`, mpp: 0.2 / 612, tint: KTOP_TINT[id] }));
 // カップボード（ハイカウンター）の天板は、テノールに加えてメラミンポストフォームの2色も選べる。色はカタログの色見本から
 const CB_TOPS = [...KTOPS, ...[['mpf-white', 'ホワイト', '#f7f7f5'], ['mpf-gray', 'ダークグレー', '#544e4a']].map(([id, name, hex]) => ({ id, name: `メラミンポストフォーム ${name}`, hex }))];
 const topsOf = type => type === 'backcounter' ? CB_TOPS : KTOPS;
