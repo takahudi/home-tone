@@ -128,9 +128,10 @@ const KDOORS = [
   ['j-oak', 'J', 'チョークドオーク', '#e8ddc7'], ['j-elm', 'J', 'グレイッシュエルム', '#bfb1a6'],
   ['b-linen', 'B', 'リネンベージュ', '#d4cfcc'], ['b-ice', 'B', 'アイスブルー', '#bdccd1'], ['b-mimosa', 'B', 'ミモザイエロー', '#f4c575'], ['b-slate', 'B', 'スレートグレー', '#6d6d6c'],
 ].map(([id, series, name, hex, gloss]) => ({ id, series, name, hex, gloss: !!gloss, img: `interior/kitchen/${id}.jpg`, mpp: 0.4 / 435 }));
-// 天板：人造大理石「テノール」カウンター（Grade 5）
-const KTOPS = [['tenor-white', 'ソルティホワイト', '#f1f3ec'], ['tenor-gray', 'メテオダークグレー', '#575550'], ['tenor-brown', 'バーストブラウン', '#665246'], ['tenor-black', 'アイアンブラック', '#313230']]
-  .map(([id, name, hex]) => ({ id, name: `テノール ${name}`, hex, img: `interior/kitchen/${id}.jpg`, mpp: 0.2 / 612 }));
+// 天板：人造大理石「テノール」カウンター（Grade 5）。img はカタログ P.54 の、シンクの縁が写った方の写真（右の拡大写真ではない）から、シンクを避けて切り出し、
+// 写真の照明ムラを均したもの。実寸は写真に写るシンクの角の丸み（約100px）を R60mm と見積もって決めた（1px ≒ 0.6mm）
+const KTOPS = [['tenor-white', 'ソルティホワイト', '#f3f3ea'], ['tenor-gray', 'メテオダークグレー', '#4f4c49'], ['tenor-brown', 'バーストブラウン', '#4f433b'], ['tenor-black', 'アイアンブラック', '#40403f']]
+  .map(([id, name, hex]) => ({ id, name: `テノール ${name}`, hex, img: `interior/kitchen/${id}.jpg`, mpp: 0.0006 }));
 // カップボード（ハイカウンター）の天板は、テノールに加えてメラミンポストフォームの2色も選べる。色はカタログの色見本から
 const CB_TOPS = [...KTOPS, ...[['mpf-white', 'ホワイト', '#f7f7f5'], ['mpf-gray', 'ダークグレー', '#544e4a']].map(([id, name, hex]) => ({ id, name: `メラミンポストフォーム ${name}`, hex }))];
 const topsOf = type => type === 'backcounter' ? CB_TOPS : KTOPS;
