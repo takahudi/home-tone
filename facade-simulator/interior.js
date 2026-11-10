@@ -19,7 +19,7 @@ const ROOMS = [
       { k: 'pass', a: [3.64, 3.49], b: [4.5, 3.49], name: '階段（下り）' },
       { k: 'pass', a: [6.41, 3.49], b: [7.28, 3.49], name: '階段（上り）' },
       { k: 'closet', a: [0.08, 3.8], b: [1.74, 3.8], name: '収納' },
-      { k: 'shelf', a: [6.44, 0.5], b: [7.23, 0.5], name: '収納（扉なし・可動棚）', depth: 0.45 },
+      { k: 'shelf', a: [6.44, 0.5], b: [7.23, 0.5], name: '収納（扉なし・可動棚）', depth: 0.45, h: 2.2 },
     ],
     fixed: [
       { type: 'island', x: 5.935, z: 2.04, rot: 0 }, // 東の端（コンロ側）を東の壁に付けた壁付けフラット
@@ -37,7 +37,7 @@ const ROOMS = [
     open: [
       { k: 'win', a: [0.91, 0.21], b: [0.91, 1.86], y0: 0.36, y1: 2.06, name: 'インナーバルコニーの窓' },
       { k: 'door', a: [3.64, 2.66], b: [3.64, 3.41], name: '廊下へ' },
-      { k: 'closet', a: [1.88, 3.64], b: [3.58, 3.64], name: '収納' },
+      { k: 'shelf', a: [1.88, 3.64], b: [3.58, 3.64], name: '収納（扉なし・枕棚＋ハンガーパイプ）', depth: 0.7, rod: true },
     ] },
   { id: 'r3b', name: '洋室B', size: '4.9帖', floor: '3階',
     poly: [[4.4, 0], [7.28, 0], [7.28, 2.58], [3.64, 2.58], [3.64, 1.665], [4.4, 1.665]],
@@ -46,14 +46,14 @@ const ROOMS = [
       { k: 'door', a: [3.72, 2.58], b: [4.47, 2.58], name: '廊下へ' },
       { k: 'closet', a: [4.4, 0.08], b: [4.4, 1.59], name: '収納' },
     ],
-    skylight: { x0: 4.9, x1: 5.7, z0: 0.1, z1: 0.9 } },
+    skylight: { x0: 4.63, x1: 5.39, z0: 0.29, z1: 1.05 } },
   { id: 'r3c', name: '洋室C', size: '6帖', floor: '3階',
     poly: [[7.28, 0], [10.01, 0], [10.01, 3.64], [7.28, 3.64]],
     open: [
       { k: 'win', a: [10.01, 1.84], b: [10.01, 3.42], y0: 1.16, y1: 2.06, name: '東の窓（シャッター付）' },
       { k: 'door', a: [7.28, 2.66], b: [7.28, 3.41], name: '廊下へ' },
       { k: 'closet', a: [8.27, 3.64], b: [9.93, 3.64], name: '収納' },
-      { k: 'closet', a: [7.34, 3.64], b: [8.13, 3.64], name: '収納（小）' },
+      { k: 'shelf', a: [7.34, 3.64], b: [8.13, 3.64], name: '収納（小・扉なし・棚）', depth: 0.7 },
     ] },
 ];
 
@@ -194,6 +194,7 @@ const CAT = {
   wardrobe: { g: 'f', name: 'ワードローブ', w: 0.9, d: 0.6, h: 1.8, colors: WOODC, def: 'white' },
   chest: { g: 'f', name: 'チェスト', w: 0.8, d: 0.45, h: 0.9, colors: WOODC, def: 'natural' },
   rug: { g: 'f', name: 'ラグ', w: 2.0, d: 1.4, h: 0.012, colors: FABRIC, def: 'beige' },
+  piano: { g: 'f', name: '電子ピアノ', w: 1.45, d: 0.55, h: 1.0, colors: WOODC, def: 'walnut' },
   plant: { g: 'f', name: '観葉植物', w: 0.45, d: 0.45, h: 1.3 },
   downlight: { g: 'l', name: 'ダウンライト', w: 0.1, lm: 4.5 },
   ceiling: { g: 'l', name: 'シーリングライト', w: 0.55, lm: 16 },
@@ -217,23 +218,25 @@ const L = (type, x, z) => ({ type, x, z });
 const E = (type, wall, u, h) => ({ type, wall, u, h }); // wall：辺番号、u：辺の始点からの距離
 const DEFAULT_ROOMS = {
   ldk: { wall: 'white', floor: 'oak', ceiling: 'white', door: 'white', accent: { wall: 0, color: 'greige', on: false }, lightCol: 'warm',
-    // ソファの後ろ（南の収納前）に通路 65cm。カウンターは南側の収納の横の凹み（幅1.82m・奥行60cm）の奥の壁に付ける
-    items: [F('tvboard', 1.3, 0.24), F('sofa3', 1.3, 2.7, 180), F('lowtable', 1.3, 1.75), F('dining4', 3.75, 1.98, 0), F('counter', 2.73, 4.175, 180), F('chair', 2.73, 3.78, 180),
-      L('ceiling', 1.3, 1.95), L('pendant', 3.75, 1.98), L('downlight', 5.0, 1.2), L('downlight', 6.6, 1.2), L('downlight', 5.0, 2.85), L('downlight', 6.6, 2.85), L('downlight', 2.6, 3.7),
-      E('aircon', 9, 3.25, null), E('tv', 0, 1.3, 0.25), E('lan', 0, 1.7, 0.25), E('outlet', 0, 0.55, 0.25), E('outlet', 9, 0.6, 0.25), E('outlet', 6, 1.4, 0.25),
-      E('switch', 4, 2.55, 1.2), E('switch', 3, 1.1, 1.2), E('outlet', 1, 0.3, 1.1)] },
+    items: [F('tvboard', 1.52, 0.23), F('rug', 1.52, 1.5), F('sofa3', 1.51, 2.58, 180), F('dining4', 3.82, 2.16, 0),
+      L('ceiling', 1.52, 1.6), L('pendant', 3.82, 2.16), L('downlight', 5.0, 1.2), L('downlight', 6.6, 1.2), L('downlight', 5.0, 2.85), L('downlight', 6.6, 2.85), L('downlight', 2.6, 3.7),
+      E('aircon', 9, 3.22, null), E('tv', 0, 1.52, 0.25), E('lan', 0, 3.43, 0.25), E('outlet', 0, 3.27, 0.25), E('outlet', 9, 2.98, 0.25),
+      E('outlet', 6, 1.67, 0.25), E('outlet', 5, 0.69, 0.25),
+      E('outlet', 0, 4.28, 1.9), E('outlet', 0, 4.79, 1.1), E('outlet', 0, 5.3, 1.1), E('outlet', 0, 5.76, 1.1),
+      E('switch', 4, 2.55, 1.2), E('switch', 3, 1.1, 1.2)] },
   r1: { wall: 'white', floor: 'oak', ceiling: 'white', door: 'white', accent: { wall: 0, color: 'bluegray', on: false }, lightCol: 'warm',
-    items: [F('bedSD', 9.4, 1.05, 0), F('desk', 7.95, 0.45, 0), F('chest', 9.55, 4.15, 180),
-      L('ceiling', 8.65, 2.2), E('aircon', 2, 1.4, null), E('outlet', 0, 1.9, 0.25), E('outlet', 0, 0.55, 0.25), E('outlet', 2, 0.9, 0.25), E('tv', 2, 1.8, 0.25), E('switch', 3, 1.5, 1.2)] },
+    items: [F('bedS', 9.47, 1.08, 0), F('piano', 9.17, 4.08, 180),
+      L('ceiling', 8.65, 2.2), E('aircon', 0, 2.2, null), E('outlet', 0, 2.43, 1.9), E('tv', 2, 2.12, 0.25), E('switch', 3, 1.5, 1.2)] },
   r3a: { wall: 'white', floor: 'oak', ceiling: 'white', door: 'white', accent: { wall: 1, color: 'sage', on: false }, lightCol: 'warm',
-    items: [F('bedS', 3.12, 1.05, 0), F('desk', 1.55, 0.45, 0),
-      L('ceiling', 2.3, 2.0), E('aircon', 0, 0.9, null), E('outlet', 0, 1.6, 0.25), E('outlet', 1, 2.4, 0.25), E('switch', 1, 2.55, 1.2), E('lan', 0, 0.95, 0.25)] },
+    items: [F('bedS', 0.53, 3.12, 0), F('desk', 3.15, 1.7, 270),
+      L('ceiling', 2.3, 2.0), E('aircon', 0, 2.22, null), E('outlet', 1, 1.43, 0.25), E('tv', 1, 1.91, 0.25), E('lan', 1, 2.05, 0.25), E('outlet', 4, 0.47, 0.25),
+      E('switch', 1, 2.55, 1.2)] },
   r3b: { wall: 'white', floor: 'oak', ceiling: 'white', door: 'white', accent: { wall: 0, color: 'beige', on: false }, lightCol: 'warm',
-    items: [F('bedSD', 6.2, 1.25, 270),
-      L('ceiling', 5.7, 1.3), E('aircon', 2, 1.0, null), E('outlet', 1, 0.5, 0.25), E('outlet', 0, 2.0, 0.25), E('switch', 2, 2.65, 1.2)] },
+    items: [F('bedS', 6.74, 1.4, 0), F('desk', 5.49, 2.09, 180),
+      L('ceiling', 5.7, 1.3), E('aircon', 0, 2.27, null), E('outlet', 1, 0.45, 0.25), E('tv', 2, 0.32, 0.25), E('switch', 2, 2.65, 1.2)] },
   r3c: { wall: 'white', floor: 'oak', ceiling: 'white', door: 'white', accent: { wall: 1, color: 'greige', on: false }, lightCol: 'warm',
-    items: [F('bedSD', 9.4, 1.05, 0), F('desk', 7.95, 0.45, 0),
-      L('ceiling', 8.65, 1.82), E('aircon', 3, 2.2, null), E('outlet', 1, 0.6, 0.25), E('outlet', 1, 3.5, 0.25), E('outlet', 0, 0.62, 0.25), E('switch', 3, 1.1, 1.2)] },
+    items: [F('bedS', 9.47, 1.1, 0), F('desk', 7.85, 0.5, 0),
+      L('ceiling', 8.65, 1.82), E('aircon', 1, 0.5, null), E('tv', 0, 1.41, 0.25), E('outlet', 3, 2.15, 0.25), E('switch', 3, 1.1, 1.2)] },
 };
 
 /* =========================================================
@@ -443,6 +446,13 @@ function buildItem(it, lightCol) {
       box(g, 0.42, 0.04, 0.42, 0, 0.43, 0, main); box(g, 0.42, 0.4, 0.03, 0, 0.66, 0.2, main);
       for (const a of [-1, 1]) for (const b of [-1, 1]) box(g, 0.03, 0.43, 0.03, a * 0.18, 0.215, b * 0.18, main);
       break;
+    case 'piano': {
+      box(g, c.w, 0.12, c.d, 0, 0.74, 0, main); // 本体
+      for (const sx of [-1, 1]) box(g, 0.04, 0.68, c.d, sx * (c.w / 2 - 0.02), 0.34, 0, main); // 側板
+      box(g, c.w - 0.08, 0.5, 0.02, 0, 0.4, -c.d / 2 + 0.02, main); // 背板
+      box(g, c.w - 0.14, 0.02, 0.16, 0, 0.81, c.d / 2 - 0.1, std({ color: '#f6f5f0', roughness: 0.4 })); // 鍵盤
+      box(g, c.w, 0.2, 0.06, 0, 0.92, -c.d / 2 + 0.03, main); // 譜面台
+      break; }
     case 'rug': { const m = box(g, c.w, 0.012, c.d, 0, 0.006, 0, main, false); m.receiveShadow = true; break; }
     case 'plant': cyl(g, 0.17, 0.13, 0.32, 0, 0.16, 0, MAT.pot); { const r = rng(9); for (let k = 0; k < 9; k++) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16 + r() * 0.08, 0), MAT.leaf); m.position.set((r() - 0.5) * 0.3, 0.6 + r() * 0.65, (r() - 0.5) * 0.3); m.castShadow = true; g.add(m); } } break;
     case 'island': kitchenModel(g, c, it); break;
@@ -494,7 +504,7 @@ const SIDES = ['A', 'B'];
 export function createInterior(root, { onPlan } = {}) {
   let state;
   try { state = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { state = null; }
-  if (!state || !state.rooms) state = { room: 'ldk', tab: 'wall', night: false, rooms: {} };
+  if (!state || !state.rooms) state = { room: 'ldk', tab: 'wall', night: false, rooms: {}, migr: 3 }; // 新しい状態は今の初期配置のまま（下の移行は古い保存データだけ）
   for (const r of ROOMS) if (!state.rooms[r.id]) state.rooms[r.id] = structuredClone(DEFAULT_ROOMS[r.id]);
   // 旧配置からの移行（1回だけ）：LDK のソファ・ローテーブルを前に出して後ろに通路を確保し、ラグは外す
   if (!(state.migr >= 1)) {
@@ -512,6 +522,11 @@ export function createInterior(root, { onPlan } = {}) {
   // プランA（rooms）とプランB（roomsB）。B がまだなければ今の内容（A）をコピーして始める
   if (!state.roomsB) state.roomsB = structuredClone(state.rooms);
   for (const r of ROOMS) if (!state.roomsB[r.id]) state.roomsB[r.id] = structuredClone(DEFAULT_ROOMS[r.id]);
+  // 2026.11.10 の図面に合わせて、家具・照明・コンセント・エアコンを図面の配置に置き換える（1回だけ。色の選択は残す）
+  if (!(state.migr >= 3)) {
+    for (const rooms of [state.rooms, state.roomsB]) for (const r of ROOMS) rooms[r.id].items = structuredClone(DEFAULT_ROOMS[r.id].items);
+    state.migr = 3;
+  }
   if (state.mode !== 'compare') state.mode = 'single';
   if (state.edit !== 'B') state.edit = 'A';
   if (typeof state.sync !== 'boolean') state.sync = true;
@@ -598,7 +613,7 @@ export function createInterior(root, { onPlan } = {}) {
       // 壁
       for (const e of ed) {
         const ops = room.open.map(o => { const u0 = onEdge(e, o.a), u1 = onEdge(e, o.b); return u0 != null && u1 != null ? { ...o, u0: Math.min(u0, u1), u1: Math.max(u0, u1) } : null; }).filter(Boolean);
-        const holes = ops.filter(o => o.k !== 'closet').map(o => ({ u0: o.u0, u1: o.u1, y0: o.k === 'win' ? o.y0 : 0, y1: o.k === 'win' ? o.y1 : o.k === 'pass' ? CH : 2.0 }));
+        const holes = ops.filter(o => o.k !== 'closet').map(o => ({ u0: o.u0, u1: o.u1, y0: o.k === 'win' ? o.y0 : 0, y1: o.k === 'win' ? o.y1 : o.k === 'pass' ? CH : o.h || 2.0 }));
         const us = new Set([0, e.len]), ys = new Set([0, CH]);
         for (const h of holes) { us.add(h.u0); us.add(h.u1); ys.add(h.y0); ys.add(h.y1); }
         const U = [...us].sort((a, b) => a - b), Y = [...ys].sort((a, b) => a - b), P = [], N = [], T = [];
@@ -637,16 +652,21 @@ export function createInterior(root, { onPlan } = {}) {
             box(g, w * 2 + 0.2, 0.05, 0.05, -w / 2, 2.07, pz - 0.03 * sz, MAT.metal, false); // 上吊りレール（床にレールなし）
             box(g, 0.02, 0.32, 0.02, w / 2 - 0.07, 1.0, pz + 0.027 * sz, mats.knob, false); // 引手
           } else if (o.k === 'shelf') {
-            // 扉のないパントリー：奥の壁・側面・天井と、可動棚（棚柱付き、見た目だけ）
-            const D = o.depth || 0.5, zc = -D / 2 * sz, sh = std({ color: '#f1efe9', roughness: 0.6 });
-            box(g, w, 2.0, 0.01, 0, 1.0, -(D + 0.005) * sz, mats.wall, false);
-            for (const x of [-w / 2 - 0.005, w / 2 + 0.005]) box(g, 0.01, 2.0, D, x, 1.0, zc, mats.wall, false);
-            box(g, w, 0.01, D, 0, 2.005, zc, mats.wall, false);
+            // 扉のない収納：奥の壁・側面・天井と、可動棚（棚柱付き、見た目だけ）。rod は枕棚＋ハンガーパイプ、h は垂れ壁の下端
+            const D = o.depth || 0.5, H = o.h || 2.0, zc = -D / 2 * sz, sh = std({ color: '#f1efe9', roughness: 0.6 });
+            box(g, w, H, 0.01, 0, H / 2, -(D + 0.005) * sz, mats.wall, false);
+            for (const x of [-w / 2 - 0.005, w / 2 + 0.005]) box(g, 0.01, H, D, x, H / 2, zc, mats.wall, false);
+            box(g, w, 0.01, D, 0, H + 0.005, zc, mats.wall, false);
             const fl = box(g, w, 0.004, D, 0, 0.002, zc, mats.floor, false); meterUV(fl.geometry, w, D); fl.receiveShadow = true;
-            for (const x of [-w / 2 + 0.06, w / 2 - 0.06]) box(g, 0.025, 1.9, 0.012, x, 1.0, -(D - 0.006) * sz, MAT.metal, false);
-            for (const y of [0.45, 0.8, 1.15, 1.5, 1.85]) box(g, w - 0.01, 0.02, D - 0.04, 0, y, -(D / 2 + 0.02) * sz, sh);
-            for (const x of [-w / 2 - 0.02, w / 2 + 0.02]) box(g, 0.04, 2.04, 0.012, x, 1.02, 0.006 * sz, mats.dframe, false);
-            box(g, w + 0.08, 0.04, 0.012, 0, 2.02, 0.006 * sz, mats.dframe, false);
+            if (o.rod) {
+              box(g, w - 0.01, 0.02, 0.4, 0, 1.7, -(D - 0.2) * sz, sh);
+              box(g, w - 0.02, 0.025, 0.025, 0, 1.62, -(D / 2) * sz, MAT.metal, false);
+            } else {
+              for (const x of [-w / 2 + 0.06, w / 2 - 0.06]) box(g, 0.025, H - 0.1, 0.012, x, H / 2, -(D - 0.006) * sz, MAT.metal, false);
+              for (const y of [0.45, 0.8, 1.15, 1.5, 1.85].filter(y => y < H - 0.1)) box(g, w - 0.01, 0.02, D - 0.04, 0, y, -(D / 2 + 0.02) * sz, sh);
+            }
+            for (const x of [-w / 2 - 0.02, w / 2 + 0.02]) box(g, 0.04, H + 0.04, 0.012, x, H / 2 + 0.02, 0.006 * sz, mats.dframe, false);
+            box(g, w + 0.08, 0.04, 0.012, 0, H + 0.02, 0.006 * sz, mats.dframe, false);
           } else if (o.k === 'door' || o.k === 'closet') {
             const n = o.k === 'closet' ? Math.max(2, Math.round(w / 0.45)) : 1, pw = w / n;
             const dz = (o.k === 'door' ? -0.03 : 0.02) * sz, front = dz + 0.0175 * sz;
