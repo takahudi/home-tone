@@ -105,10 +105,15 @@ const doorOf = id => colorOf(DOORCOL, DOOR_ALIAS[id] || id);
 const doorLabel = d => `${d.name}（${d.code}）`;
 const DFRAME = [['white', '白', '#f3f2ee'], ['black', '黒', '#232426']].map(([id, name, hex]) => ({ id, name, hex }));
 const DKNOB = [['silver', 'シルバー', '#d6d9db', 0.35, 0.3], ['black', '黒', '#1f2022', 0.5, 0.45]].map(([id, name, hex, metal, rough]) => ({ id, name, hex, metal, rough }));
+// 布・木部の色。後半は、モルタル調・ダークグレーのキッチンにも、クリームストーンのキッチンにも合わせられるように足した、彩度を抑えた中間色
 const FABRIC = [['gray', 'グレー', '#8d8e8c'], ['beige', 'ベージュ', '#c9b9a0'], ['ivory', 'アイボリー', '#e3dccd'], ['navy', 'ネイビー', '#34405a'],
-  ['green', 'グリーン', '#5c6b52'], ['brown', 'ブラウン', '#6d4f3c'], ['mustard', 'マスタード', '#b99146'], ['charcoal', 'チャコール', '#3c3d3f']]
+  ['green', 'グリーン', '#5c6b52'], ['brown', 'ブラウン', '#6d4f3c'], ['mustard', 'マスタード', '#b99146'], ['charcoal', 'チャコール', '#3c3d3f'],
+  ['lightgray', 'ライトグレー', '#b9b9b5'], ['stone', 'ストーングレー', '#9a958d'], ['greige', 'グレージュ', '#aaa293'], ['oatmeal', 'オートミール', '#d5cbb9'],
+  ['sand', 'サンド', '#bcab92'], ['mocha', 'モカ', '#87725f']]
   .map(([id, name, hex]) => ({ id, name, hex }));
-const WOODC = [['natural', 'ナチュラル', '#c49a6c'], ['walnut', 'ウォールナット', '#5f4331'], ['white', 'ホワイト', '#efeeea'], ['black', 'ブラック', '#2a2b2d'], ['gray', 'グレー', '#8c8d8c']]
+const WOODC = [['natural', 'ナチュラル', '#c49a6c'], ['walnut', 'ウォールナット', '#5f4331'], ['white', 'ホワイト', '#efeeea'], ['black', 'ブラック', '#2a2b2d'], ['gray', 'グレー', '#8c8d8c'],
+  ['ash', 'ホワイトアッシュ', '#d9c9ae'], ['oak', 'ナチュラルオーク', '#c4aa86'], ['greige', 'グレージュオーク', '#ae9f8a'], ['smoke', 'スモークオーク', '#806c5b'],
+  ['charcoal', 'チャコールオーク', '#4a4540'], ['ivory', 'アイボリー', '#e6e0d3']]
   .map(([id, name, hex]) => ({ id, name, hex }));
 // キッチン・カップボードの扉の色見本を、TOCLAS カラーシミュレーション（スリムフラット-W）の CG の見え方に寄せる補正（sRGB の倍率 R,G,B）。
 // 内観のアイランドを同じ向きから描いた色が CG の扉の平均色に合うように測って決めた
