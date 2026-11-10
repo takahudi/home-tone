@@ -316,7 +316,7 @@ details.in-fl>.colors{margin-top:8px}
   <header class="bar">
     <div class="brand">
       <h1><span id="appTitle">外壁カラーシミュレーター</span></h1>
-      <p>プランNo.5（2026.06.09）・木造3階建・インナーガレージ／<span class="num">間口 4,400 × 奥行 10,010 mm</span></p>
+      <p>プランNo.5（2026.11.10）・木造3階建・インナーガレージ／<span class="num">間口 4,400 × 奥行 10,010 mm</span></p>
     </div>
     <div class="bar-actions">
       <div class="seg app-mode" id="appMode" role="tablist" aria-label="モード">
@@ -508,12 +508,12 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* =========================================================
-   建物寸法（m）— プランNo.5（2026.06.09）平面図・立面図より
+   建物寸法（m）— プランNo.5（2026.11.10）平面図・立面図より
    x: 北(0) → 南(W) / z: 西面(0) → 東(-D) / y: GL
    ========================================================= */
 const W = 4.4, D = 10.01;
-const Y_FOUND = 0.4, Y_2F = 3.05, Y_3F = 5.95, Y_TOP = 8.3;
-const GAR = { x0: 0.15, x1: W - 0.175, z1: -3.64, top: 2.46, open0: 1.5 };
+const Y_FOUND = 0.55, Y_2F = 3.297, Y_3F = 6.044, Y_TOP = 8.687; // 1FL・2FL・3FL・軒高（立面図）
+const GAR = { x0: 0.09, x1: W - 0.09, z1: -3.64, top: 2.77, open0: 1.46 };
 const v = (x, y, z) => new THREE.Vector3(x, y, z);
 const X = v(1, 0, 0), Y = v(0, 1, 0), Z = v(0, 0, 1), O0 = v(0, 0, 0);
 
@@ -525,19 +525,18 @@ const FACES = {
 };
 // 開口（u: 外から見て左端からの距離, y: GLからの高さ）
 const OPENINGS = [
-  { f: 'W', u0: 1.5,  u1: GAR.x1, y0: 0,    y1: 2.46, kind: 'garage', depth: 0.15 },
-  { f: 'W', u0: 1.42, u1: 3.07, y0: 3.9,  y1: 5.1,  kind: 'win', panes: 2, shutter: true },
-  { f: 'W', u0: 0.3,  u1: 2.0,  y0: 6.2,  y1: 7.75, kind: 'recess', depth: 0.91 },
-  { f: 'S', u0: 2.85, u1: 3.55, y0: 0,    y1: 2.4,  kind: 'pass', depth: W - GAR.x1 },
-  { f: 'S', u0: 2.98, u1: 3.5,  y0: 4.3,  y1: 5.0,  kind: 'win', panes: 1 },
-  { f: 'S', u0: 3.84, u1: 4.35, y0: 6.8,  y1: 7.55, kind: 'win', panes: 1 },
-  { f: 'E', u0: 1.44, u1: 2.62, y0: 6.8,  y1: 7.55, kind: 'win', panes: 3 },
-  { f: 'E', u0: 1.83, u1: 2.0,  y0: 1.44, y1: 2.39, kind: 'win', panes: 1 },
-  { f: 'N', u0: 3.32, u1: 3.53, y0: 6.56, y1: 7.48, kind: 'win', panes: 1 },
-  { f: 'N', u0: 3.76, u1: 3.97, y0: 6.56, y1: 7.48, kind: 'win', panes: 1 },
-  { f: 'N', u0: 6.91, u1: 7.12, y0: 3.12, y1: 4.92, kind: 'win', panes: 1 },
-  { f: 'N', u0: 2.44, u1: 2.63, y0: 1.39, y1: 2.31, kind: 'win', panes: 1 },
-  { f: 'N', u0: 6.43, u1: 7.15, y0: 0,    y1: 2.4,  kind: 'pass', depth: GAR.x0 },
+  { f: 'W', u0: GAR.open0, u1: GAR.x1, y0: 0, y1: GAR.top, kind: 'garage', depth: 0.15 },
+  { f: 'W', u0: 1.48, u1: 3.08, y0: 4.21, y1: 5.35, kind: 'win', panes: 2, shutter: true },
+  { f: 'W', u0: 0.09, u1: 1.99, y0: 6.92, y1: 8.31, kind: 'recess', depth: 0.91 },
+  { f: 'S', u0: 2.82, u1: 3.55, y0: 0,    y1: GAR.top, kind: 'pass', depth: W - GAR.x1 },
+  { f: 'S', u0: 2.42, u1: 3.03, y0: 5.21, y1: 5.51, kind: 'win', panes: 1 },
+  { f: 'E', u0: 1.02, u1: 2.52, y0: 1.5,  y1: 2.6,  kind: 'win', panes: 2, shutter: true },
+  { f: 'E', u0: 1.02, u1: 2.52, y0: 7.2,  y1: 8.1,  kind: 'win', panes: 2, shutter: true },
+  { f: 'N', u0: 8.61, u1: 9.27, y0: 5.21, y1: 5.51, kind: 'win', panes: 1 },
+  { f: 'N', u0: 7.56, u1: 8.22, y0: 5.21, y1: 5.51, kind: 'win', panes: 1 },
+  { f: 'N', u0: 3.74, u1: 4.4,  y0: 4.65, y1: 4.95, kind: 'win', panes: 1 },
+  { f: 'N', u0: 4.17, u1: 5.5,  y0: 7.2,  y1: 8.1,  kind: 'win', panes: 2, shutter: true },
+  { f: 'N', u0: 6.46, u1: 7.19, y0: 0,    y1: GAR.top, kind: 'pass', depth: GAR.x0 },
 ];
 
 /* =========================================================
@@ -620,7 +619,7 @@ const OPTIONS = {
 };
 const ZONES = [['f3', '3階'], ['balc', 'バルコニー内'], ['f2', '2階'], ['f1', '1階'], ['garage', 'ガレージ']];
 const ZONE_KEYS = ZONES.map(z => z[0]);
-const DOOR_SIZE = { u0: 0.62, u1: 1.47, y0: 0.17, y1: 2.27, depth: 0.04, w: 0.85, h: 2.1 };
+const DOOR_SIZE = { u0: 0.71, u1: 1.56, y0: 0.32, y1: 2.42, depth: 0.04, w: 0.85, h: 2.1 };
 // YKK AP 断熱玄関ドア ヴェナートD30 デザイン一覧（ご提供カタログ P.8〜9）。画像は同カタログの扉写真。
 const DOOR_TASTES = { N: 'ナチュラル', C: 'シック' };
 // ヴェナートD30 ナチュラル（P.42〜89）・シック（P.124〜153）の各デザインのカラーバリエーション。[色記号, 画像番号]
@@ -1079,7 +1078,7 @@ function roofMono(B) {
   B('f3').tri(P(FN, 0, Y_TOP), P(FN, D, Y_TOP), P(FN, D, Y_TOP + R), FN.N, FN.U, Y, FN.o);
 }
 function roofHip(B) {
-  const o = 0.35, fh = 0.15, ye = Y_TOP + fh, pitch = 0.35, yr = ye + pitch * (W / 2 + o);
+  const o = 0.3, fh = 0.12, ye = Y_TOP + fh, pitch = 0.3, yr = ye + pitch * (W / 2 + o);
   const xa = -o, xb = W + o, zf = o, zb = -D - o, r1 = v(W / 2, yr, -W / 2), r2 = v(W / 2, yr, -D + W / 2);
   const A = v(xa, ye, zf), Bc = v(xb, ye, zf), C = v(xb, ye, zb), Dd = v(xa, ye, zb);
   const face = (pts) => {
@@ -1122,13 +1121,13 @@ function buildHouse(roofType) {
   }
   // 3階インナーバルコニー
   const RD = 0.91, WR = { o: v(0, 0, -RD), U: X, N: Z };
-  const rwin = { u0: 0.7, u1: 1.9, y0: 6.25, y1: 7.5, panes: 2 };
-  wallRegion(B, WR, 0.3, 2.0, 6.2, 7.75, [rwin], 'balc');
+  const rwin = { u0: 0.24, u1: 1.84, y0: 6.97, y1: 8.1, panes: 2 };
+  wallRegion(B, WR, 0.09, 1.99, 6.92, 8.31, [rwin], 'balc');
   addWindow(B, WR, rwin, 'balc');
   const FW = FACES.W;
-  for (const u of [0.36, 1.15, 1.94]) boxF(B, 'sash', FW, u, 6.5, 0.05, 0.04, 0.6, 0.04);
-  for (const y of [6.36, 6.5, 6.64]) boxF(B, 'sash', FW, 1.15, y, 0.04, 1.64, 0.03, 0.02);
-  boxF(B, 'sash', FW, 1.15, 6.8, 0.05, 1.7, 0.04, 0.06);
+  for (const u of [0.14, 1.04, 1.94]) boxF(B, 'sash', FW, u, 7.1, 0.05, 0.04, 0.36, 0.04);
+  for (const y of [7.0, 7.08, 7.17]) boxF(B, 'sash', FW, 1.04, y, 0.04, 1.84, 0.03, 0.02);
+  boxF(B, 'sash', FW, 1.04, 7.27, 0.05, 1.9, 0.04, 0.06);
   // インナーガレージ
   const G = GAR;
   const GBK = { o: v(0, 0, G.z1), U: X, N: Z };
@@ -1138,15 +1137,15 @@ function buildHouse(roofType) {
   B('door').quad(P(GBK, door.u0, door.y0, 0.04), P(GBK, door.u1, door.y0, 0.04), P(GBK, door.u1, door.y1, 0.04), P(GBK, door.u0, door.y1, 0.04), Z, X, Y, O0);
   ring(B, GBK, door.u0 - 0.035, door.u1 + 0.035, door.y0, door.y1 + 0.035, 0.04, 0.02, 0.05);
   boxF(B, 'handle', GBK, door.u0 + 0.1, 1.15, 0.015, 0.025, 0.75, 0.03);
-  B('tile').box(v((door.u0 + door.u1) / 2, 0.085, G.z1 + 0.22), X, Y, Z, 1.15, 0.17, 0.44);
+  B('tile').box(v((door.u0 + door.u1) / 2, door.y0 / 2, G.z1 + 0.22), X, Y, Z, 1.15, door.y0, 0.44);
   const GN = { o: v(G.x0, 0, 0), U: v(0, 0, -1), N: X };
-  wallRegion(B, GN, 0.15, -G.z1, 0, G.top, [{ u0: 2.86, u1: 3.58, y0: 0, y1: 2.4 }], 'garage');
+  wallRegion(B, GN, 0.15, -G.z1, 0, G.top, [{ u0: 2.82, u1: 3.55, y0: 0, y1: G.top }], 'garage');
   const GS = { o: v(G.x1, 0, G.z1), U: Z, N: v(-1, 0, 0) };
-  wallRegion(B, GS, 0, -G.z1 - 0.15, 0, G.top, [{ u0: 0.09, u1: 0.79, y0: 0, y1: 2.4 }], 'garage');
+  wallRegion(B, GS, 0, -G.z1 - 0.15, 0, G.top, [{ u0: 0.09, u1: 0.82, y0: 0, y1: G.top }], 'garage');
   const GF = { o: v(G.open0, 0, -0.15), U: v(-1, 0, 0), N: v(0, 0, -1) };
   wallRegion(B, GF, 0, G.open0 - G.x0, 0, G.top, [], 'garage');
-  // ガレージ正面と玄関（インナーポーチ）の間の袖壁：正面から1,820mm奥、北側の壁から1,365mm（平面図より）
-  const PZ = -1.82, PT = 0.12, PX1 = 1.365;
+  // ガレージ正面と玄関（インナーポーチ）の間の袖壁：正面から1,820mm奥、北側の壁から約1,410mm（平面図より）
+  const PZ = -1.82, PT = 0.12, PX1 = 1.41;
   B('garage').box(v((G.x0 + PX1) / 2, G.top / 2, PZ - PT / 2), X, Y, Z, PX1 - G.x0, G.top, PT);
   // インナーポーチの床タイル（袖壁の奥〜玄関、斜めの縁は平面図の形を簡略化）
   B('tile').quad(v(G.x0, 0.012, PZ - PT), v(PX1 + 0.35, 0.012, PZ - PT), v(PX1 + 0.35, 0.012, G.z1), v(G.x0, 0.012, G.z1), Y, X, Z, O0);
