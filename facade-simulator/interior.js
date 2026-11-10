@@ -10,10 +10,10 @@ const ROOMS = [
   { id: 'ldk', name: 'LDK', size: '16.26帖', floor: '2階',
     poly: [[0, 0], [6.39, 0], [6.39, 0.5], [7.28, 0.5], [7.28, 3.49], [3.64, 3.49], [3.64, 4.4], [1.82, 4.4], [1.82, 3.8], [0, 3.8]],
     open: [
-      { k: 'win', a: [0, 1.44], b: [0, 3.12], y0: 0.91, y1: 2.05, name: '西の窓（シャッター付）' },
+      { k: 'win', a: [0, 1.44], b: [0, 3.12], y0: 0.91, y1: 2.05, name: '西の窓（シャッター付）', panes: 2 },
       { k: 'win', a: [0.74, 0], b: [1.4, 0], y0: 1.9, y1: 2.2, name: '北の高窓' },
       { k: 'win', a: [1.78, 0], b: [2.44, 0], y0: 1.9, y1: 2.2, name: '北の高窓' },
-      { k: 'win', a: [5.61, 0], b: [6.27, 0], y0: 1.35, y1: 1.65, name: '北の小窓（カップボードの上）' },
+      { k: 'win', a: [5.61, 0], b: [6.27, 0], y0: 1.35, y1: 1.65, name: '北の小窓（カップボードの間）' },
       { k: 'win', a: [2.42, 4.4], b: [3.03, 4.4], y0: 1.9, y1: 2.2, name: '南の小窓（FIX）' },
       { k: 'door', a: [7.28, 1.77], b: [7.28, 3.41], name: '洗面所・トイレへ（廊下側に吊り下げの引き戸）', slide: true },
       { k: 'pass', a: [3.64, 3.49], b: [4.5, 3.49], name: '階段（下り）' },
@@ -23,26 +23,26 @@ const ROOMS = [
     ],
     fixed: [
       { type: 'island', x: 5.935, z: 2.04, rot: 0 }, // 東の端（コンロ側）を東の壁に付けた壁付けフラット
-      { type: 'backcounter', x: 5.48, z: 0.33, rot: 0 },
+      { type: 'backcounter', x: 5.48, z: 0.23, rot: 0 },
       { type: 'fridge', x: 4.2, z: 0.344, rot: 0 }, // 幅60×奥行64.8×高さ185cm、北の壁から2cm
     ] },
   { id: 'r1', name: '洋室', size: '7.25帖', floor: '1階',
     poly: [[7.28, 0], [10.01, 0], [10.01, 4.4], [7.28, 4.4]],
     open: [
-      { k: 'win', a: [10.01, 1.84], b: [10.01, 3.42], y0: 0.95, y1: 2.05, name: '東の窓（シャッター付）' },
+      { k: 'win', a: [10.01, 1.84], b: [10.01, 3.42], y0: 0.95, y1: 2.05, name: '東の窓（シャッター付）', panes: 2 },
       { k: 'door', a: [7.28, 1.9], b: [7.28, 2.65], name: '廊下へ' },
     ] },
   { id: 'r3a', name: '洋室A', size: '7.7帖', floor: '3階',
     poly: [[0.91, 0], [3.64, 0], [3.64, 3.64], [1.82, 3.64], [1.82, 4.4], [0, 4.4], [0, 2.075], [0.91, 2.075]],
     open: [
-      { k: 'win', a: [0.91, 0.21], b: [0.91, 1.86], y0: 0.36, y1: 2.06, name: 'インナーバルコニーの窓' },
+      { k: 'win', a: [0.91, 0.21], b: [0.91, 1.86], y0: 0.36, y1: 2.06, name: 'インナーバルコニーの窓', panes: 2 },
       { k: 'door', a: [3.64, 2.66], b: [3.64, 3.41], name: '廊下へ' },
       { k: 'shelf', a: [1.88, 3.64], b: [3.58, 3.64], name: '収納（扉なし・枕棚＋ハンガーパイプ）', depth: 0.7, rod: true },
     ] },
   { id: 'r3b', name: '洋室B', size: '4.9帖', floor: '3階',
     poly: [[4.4, 0], [7.28, 0], [7.28, 2.58], [3.64, 2.58], [3.64, 1.665], [4.4, 1.665]],
     open: [
-      { k: 'win', a: [4.47, 0], b: [5.88, 0], y0: 1.16, y1: 2.06, name: '北の窓（シャッター付）' },
+      { k: 'win', a: [4.47, 0], b: [5.88, 0], y0: 1.16, y1: 2.06, name: '北の窓（シャッター付）', panes: 2 },
       { k: 'door', a: [3.72, 2.58], b: [4.47, 2.58], name: '廊下へ' },
       { k: 'closet', a: [4.4, 0.08], b: [4.4, 1.59], name: '収納' },
     ],
@@ -50,7 +50,7 @@ const ROOMS = [
   { id: 'r3c', name: '洋室C', size: '6帖', floor: '3階',
     poly: [[7.28, 0], [10.01, 0], [10.01, 3.64], [7.28, 3.64]],
     open: [
-      { k: 'win', a: [10.01, 1.84], b: [10.01, 3.42], y0: 1.16, y1: 2.06, name: '東の窓（シャッター付）' },
+      { k: 'win', a: [10.01, 1.84], b: [10.01, 3.42], y0: 1.16, y1: 2.06, name: '東の窓（シャッター付）', panes: 2 },
       { k: 'door', a: [7.28, 2.66], b: [7.28, 3.41], name: '廊下へ' },
       { k: 'closet', a: [8.27, 3.64], b: [9.93, 3.64], name: '収納' },
       { k: 'shelf', a: [7.34, 3.64], b: [8.13, 3.64], name: '収納（小・扉なし・棚）', depth: 0.7 },
@@ -126,6 +126,9 @@ const KDOORS = [
 // 天板：人造大理石「テノール」カウンター（Grade 5）
 const KTOPS = [['tenor-white', 'ソルティホワイト', '#f1f3ec'], ['tenor-gray', 'メテオダークグレー', '#575550'], ['tenor-brown', 'バーストブラウン', '#665246'], ['tenor-black', 'アイアンブラック', '#313230']]
   .map(([id, name, hex]) => ({ id, name: `テノール ${name}`, hex, img: `interior/kitchen/${id}.jpg`, mpp: 0.2 / 612 }));
+// カップボード（ハイカウンター）の天板は、テノールに加えてメラミンポストフォームの2色も選べる。色はカタログの色見本から
+const CB_TOPS = [...KTOPS, ...[['mpf-white', 'ホワイト', '#f7f7f5'], ['mpf-gray', 'ダークグレー', '#544e4a']].map(([id, name, hex]) => ({ id, name: `メラミンポストフォーム ${name}`, hex }))];
+const topsOf = type => type === 'backcounter' ? CB_TOPS : KTOPS;
 // レンジフード：トクラス サイドフード SHVR の3色（トクラス コラージア スリムフラットW のカラーシミュレーションより）
 const RHOOD = [['shvr1', 'シルバー', '#c9cccd', 0.35, 0.3], ['shvr2', 'ブラック', '#2b2c2e', 0.3, 0.4], ['shvr3', 'ホワイト', '#f2f2ef', 0, 0.35]]
   .map(([id, name, hex, metal, rough]) => ({ id, name: `サイドフード SHVR ${name}`, short: name, hex, metal, rough }));
@@ -144,6 +147,7 @@ const SWATCH_IMG = {};
 let onTexLoad = () => {};
 function swatchMat(o, w, h, rough) {
   const m = std({ color: o.hex, roughness: rough });
+  if (!o.img) return m;
   (SWATCH_IMG[o.img] || (SWATCH_IMG[o.img] = new Promise((ok, ng) => { const im = new Image(); im.onload = () => ok(im); im.onerror = ng; im.src = o.img; }))).then(im => {
     const t = new THREE.Texture(im); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping; t.anisotropy = 8;
     t.repeat.set(w / (im.width * o.mpp), h / (im.height * o.mpp)); t.needsUpdate = true;
@@ -205,7 +209,7 @@ const CAT = {
   lan: { g: 'e', name: 'LAN（情報コンセント）', h0: 0.25 },
   aircon: { g: 'e', name: 'エアコン', h0: CH - 0.07 - 0.29, fixedH: true },
   island: { g: 'k', name: 'キッチン（スリムフラット）', w: 2.58, d: 0.9, h: 0.85, kit: true },
-  backcounter: { g: 'k', name: 'カップボード', w: 1.8, d: 0.65, h: 2.1, kit: true },
+  backcounter: { g: 'k', name: 'カップボード', w: 1.8, d: 0.45, h: 2.35, kit: true },
   fridge: { g: 'k', name: '冷蔵庫（Panasonic NR-E45RY3）', w: 0.6, d: 0.648, h: 1.85, colors: FRIDGE, def: 'S' },
 };
 const GROUP_LABEL = { f: '家具', l: '照明', e: '電気・エアコン', k: 'キッチン' };
@@ -457,17 +461,35 @@ function buildItem(it, lightCol) {
     case 'plant': cyl(g, 0.17, 0.13, 0.32, 0, 0.16, 0, MAT.pot); { const r = rng(9); for (let k = 0; k < 9; k++) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16 + r() * 0.08, 0), MAT.leaf); m.position.set((r() - 0.5) * 0.3, 0.6 + r() * 0.65, (r() - 0.5) * 0.3); m.castShadow = true; g.add(m); } } break;
     case 'island': kitchenModel(g, c, it); break;
     case 'backcounter': {
-      // 扉・本体は同じ扉色、天板はカウンターカラー。扉の割り付け（目地）は手前（+z）側
-      const kd = kdoorOf(it.color), kt = colorOf(KTOPS, it.top), r = kd.gloss ? 0.18 : 0.55, bh = 0.85 - 0.03, seam = MAT.black;
-      const kick = std({ color: '#3a3a3a', roughness: 0.7 });
-      box(g, c.w - 0.02, 0.08, c.d - 0.08, 0, 0.04, -0.04, kick);
-      box(g, c.w, bh - 0.08, c.d, 0, 0.08 + (bh - 0.08) / 2, 0, swatchMat(kd, c.w, bh - 0.08, r));
-      const n = Math.max(2, Math.round(c.w / 0.6));
-      for (let k = 1; k < n; k++) box(g, 0.004, bh - 0.1, 0.01, -c.w / 2 + k * c.w / n, 0.09 + (bh - 0.1) / 2, c.d / 2 + 0.003, seam, false);
-      for (const y of [0.42, 0.64]) box(g, c.w - 0.01, 0.004, 0.01, 0, y, c.d / 2 + 0.003, seam, false);
-      box(g, c.w, 0.03, c.d, 0, bh + 0.015, 0, swatchMat(kt, c.w, c.d, 0.35));
-      box(g, c.w, 0.7, 0.38, 0, 1.75, -c.d / 2 + 0.19, swatchMat(kd, c.w, 0.7, r));
-      for (let k = 1; k < 4; k++) box(g, 0.004, 0.68, 0.01, -c.w / 2 + k * c.w / 4, 1.75, -c.d / 2 + 0.385, seam, false);
+      // ハイカウンタータイプ用キャビネット（H1025・D450）：西に4段引出し W900、東に家電送風機オープンタイプ W900。
+      // 上にウォールキャビネット（W900 の両開き×2、H600・D450、天井から5cm下）。カウンターとの間から北の小窓が見える
+      const kd = kdoorOf(it.color), kt = colorOf(CB_TOPS, it.top), r = kd.gloss ? 0.18 : 0.55, seam = MAT.black;
+      const handle = optMat(colorOf(KHANDLE, it.handle)), gray = std({ color: '#9a9b9b', roughness: 0.6 }), kick = std({ color: '#3a3a3a', roughness: 0.7 });
+      const tt = 0.03, bh = 1.025 - tt, kh = 0.07, fz = c.d / 2 + 0.003, bk = -c.d / 2;
+      const hline = (l, r2, y, z = fz) => box(g, r2 - l - 0.006, 0.004, 0.01, (l + r2) / 2, y, z, seam, false);
+      const vline = (x, y0, y1, z = fz) => box(g, 0.004, y1 - y0, 0.01, x, (y0 + y1) / 2, z, seam, false);
+      const hbar = (l, r2, y) => box(g, r2 - l - 0.12, 0.012, 0.02, (l + r2) / 2, y, fz + 0.01, handle, false);
+      box(g, c.w - 0.01, kh, c.d - 0.06, 0, kh / 2, -0.03, kick); // 台輪
+      // 4段引出し（x -0.9〜0）：下から 大引出し・3段
+      box(g, 0.9, bh - kh, c.d, -0.45, kh + (bh - kh) / 2, 0, swatchMat(kd, 0.9, bh - kh, r));
+      const ys = [kh, kh + 0.37, kh + 0.56, kh + 0.74, bh];
+      for (let k = 1; k < 4; k++) hline(-0.9, 0, ys[k]);
+      for (let k = 0; k < 4; k++) hbar(-0.9, 0, ys[k + 1] - 0.04);
+      // 家電送風機オープンタイプ（x 0〜0.9）：側板・背板、スライド棚、下にダストボックスワゴン
+      vline(0, kh, bh);
+      box(g, 0.02, bh - kh, c.d, 0.89, kh + (bh - kh) / 2, 0, swatchMat(kd, c.d, bh - kh, r));
+      box(g, 0.87, bh - kh, 0.01, 0.445, kh + (bh - kh) / 2, bk + 0.005, gray, false);
+      box(g, 0.87, 0.02, c.d - 0.01, 0.445, bh - 0.01, 0.005, gray, false);
+      box(g, 0.86, 0.38, c.d - 0.03, 0.445, kh + 0.19, 0.015, swatchMat(kd, 0.86, 0.38, r)); // ワゴン
+      hbar(0, 0.9, kh + 0.34);
+      box(g, 0.86, 0.025, c.d - 0.06, 0.445, 0.5, 0, gray); // スライド棚
+      // 天板（間口いっぱい）
+      box(g, c.w + 0.005, tt, c.d + 0.01, 0, bh + tt / 2, 0.005, swatchMat(kt, c.w, c.d, 0.35));
+      // ウォールキャビネット：扉の取っ手は両開きの合わせ目の下の方
+      const wh = 0.6, wd = 0.45, wy = CH - 0.05 - wh / 2, wz = bk + wd + 0.003;
+      box(g, c.w, wh, wd, 0, wy, bk + wd / 2, swatchMat(kd, c.w, wh, r));
+      for (const x of [-0.45, 0, 0.45]) vline(x, wy - wh / 2 + 0.01, wy + wh / 2 - 0.01, wz);
+      for (const x of [-0.45, 0.45]) for (const sx of [-1, 1]) box(g, 0.012, 0.2, 0.02, x + sx * 0.04, wy - wh / 2 + 0.16, wz + 0.01, handle, false);
       break; }
     case 'fridge': { // NR-E45RY3：上から 冷蔵室（1枚扉）／小さい引き出し2つ（左右）／引き出し2段
       const f = colorOf(FRIDGE, it.color), silver = f.id === 'S';
@@ -639,7 +661,7 @@ export function createInterior(root, { onPlan } = {}) {
           if (o.k === 'win') {
             const gl = new THREE.Mesh(new THREE.PlaneGeometry(w, o.y1 - o.y0), mats.glass); gl.position.set(0, (o.y0 + o.y1) / 2, -0.08 * sz); if (sz < 0) gl.rotation.y = Math.PI; g.add(gl);
             const fw = 0.04; for (const [x, y, ww, hh] of [[-w / 2 + fw / 2, (o.y0 + o.y1) / 2, fw, o.y1 - o.y0], [w / 2 - fw / 2, (o.y0 + o.y1) / 2, fw, o.y1 - o.y0], [0, o.y1 - fw / 2, w, fw], [0, o.y0 + fw / 2, w, fw]]) box(g, ww, hh, 0.06, x, y, -0.05 * sz, mats.frame, false);
-            if (w > 0.6) box(g, 0.03, o.y1 - o.y0, 0.05, 0, (o.y0 + o.y1) / 2, -0.06 * sz, mats.frame, false);
+            if (o.panes === 2) box(g, 0.03, o.y1 - o.y0, 0.05, 0, (o.y0 + o.y1) / 2, -0.06 * sz, mats.frame, false);
             box(g, w + 0.06, 0.02, 0.1, 0, o.y0 - 0.01, 0.02 * sz, mats.base, false); // 窓台
           } else if (o.k === 'door' && o.slide) {
             // 廊下側（壁の外）に吊り下げた引き戸（アウトセット）。室内からは開口の奥に閉じた戸が見える
@@ -911,14 +933,14 @@ export function createInterior(root, { onPlan } = {}) {
 
   // ---- キッチン・カップボードの扉（本体）と天板 ----
   const curRs = () => V().rs;
-  const kitCur = (type, part) => { const rs = curRs(); return part === 'top' ? colorOf(KTOPS, rs.kitchenTop && rs.kitchenTop[type]).id : kdoorOf(rs.kitchen && rs.kitchen[type]).id; };
-  const kchip = (type, part, o, cur, title) => `<button type="button" class="chip" data-kt="${type}" data-kp="${part}" data-kc="${o.id}" aria-pressed="${cur === o.id}" title="${title}" aria-label="${title}" style="background:${o.hex} url(${o.img}) center/cover"></button>`;
+  const kitCur = (type, part) => { const rs = curRs(); return part === 'top' ? colorOf(topsOf(type), rs.kitchenTop && rs.kitchenTop[type]).id : kdoorOf(rs.kitchen && rs.kitchen[type]).id; };
+  const kchip = (type, part, o, cur, title) => `<button type="button" class="chip" data-kt="${type}" data-kp="${part}" data-kc="${o.id}" aria-pressed="${cur === o.id}" title="${title}" aria-label="${title}" style="background:${o.hex}${o.img ? ` url(${o.img}) center/cover` : ''}"></button>`;
   function kitChips(type) {
     const cd = kitCur(type, 'door'), ct = kitCur(type, 'top');
     return `<div class="in-kit"><div class="in-kit-h">扉・本体<span>${kdoorOf(cd).series}シリーズ ${kdoorOf(cd).name}</span></div>
       ${KDOOR_SERIES.map(([k, label, note]) => `<div class="in-kser"><small>${label}（${note}）</small><div class="colors">${KDOORS.filter(o => o.series === k).map(o => kchip(type, 'door', o, cd, `${label} ${o.name}`)).join('')}</div></div>`).join('')}
-      <div class="in-kit-h">天板<span>${colorOf(KTOPS, ct).name}</span></div>
-      <div class="colors">${KTOPS.map(o => kchip(type, 'top', o, ct, o.name)).join('')}</div>
+      <div class="in-kit-h">天板<span>${colorOf(topsOf(type), ct).name}</span></div>
+      <div class="colors">${topsOf(type).map(o => kchip(type, 'top', o, ct, o.name)).join('')}</div>
       ${type === 'island' ? KOPTS.map(([k, label, list]) => { const cur = optOf(k); return `<div class="in-kit-h">${label}<span>${cur.name}</span></div>
       ${k === 'sink' ? `<div class="colors">${list.map(o => `<button type="button" class="chip" data-kt="${k}" data-kp="door" data-kc="${o.id}" aria-pressed="${cur.id === o.id}" title="${o.name}" aria-label="${o.name}" style="background:${o.hex}"></button>`).join('')}</div>`
         : `<div class="seg">${list.map(o => `<button type="button" data-kt="${k}" data-kp="door" data-kc="${o.id}" aria-pressed="${cur.id === o.id}">${o.short}</button>`).join('')}</div>`}`; }).join('') : ''}</div>`;
@@ -933,7 +955,7 @@ export function createInterior(root, { onPlan } = {}) {
   }
   const kitOpen = new Set();
   $('#inBody').addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.ksec; if (k) { if (e.target.open) kitOpen.add(k); else kitOpen.delete(k); } }, true);
-  const kitDesc = (type, rs = curRs()) => `扉 ${kdoorOf(rs.kitchen && rs.kitchen[type]).name}・天板 ${colorOf(KTOPS, rs.kitchenTop && rs.kitchenTop[type]).name}${type === 'island' ? KOPTS.map(([k, label]) => `・${label} ${optOf(k, rs).short}`).join('') : ''}`;
+  const kitDesc = (type, rs = curRs()) => `扉 ${kdoorOf(rs.kitchen && rs.kitchen[type]).name}・天板 ${colorOf(topsOf(type), rs.kitchenTop && rs.kitchenTop[type]).name}${type === 'island' ? KOPTS.map(([k, label]) => `・${label} ${optOf(k, rs).short}`).join('') : ''}`;
 
   // ---- パネル ----
   const sw = (list, cur, attr) => `<div class="colors">${list.map(o => `<button type="button" class="chip${o.tex ? ' tx' : ''}" ${attr}="${o.id}" aria-pressed="${cur === o.id}" title="${o.name}" aria-label="${o.name}" style="background:${o.hex}"></button>`).join('')}</div>`;
