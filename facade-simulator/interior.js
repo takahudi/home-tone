@@ -222,7 +222,7 @@ const L = (type, x, z) => ({ type, x, z });
 const E = (type, wall, u, h) => ({ type, wall, u, h }); // wall：辺番号、u：辺の始点からの距離
 const DEFAULT_ROOMS = {
   ldk: { wall: 'white', floor: 'oak', ceiling: 'white', door: 'white', accent: { wall: 0, color: 'greige', on: false }, lightCol: 'warm',
-    items: [F('tvboard', 1.52, 0.23), F('rug', 1.52, 1.5), F('sofa3', 1.51, 2.58, 180), F('dining4', 3.82, 2.16, 0),
+    items: [F('tvboard', 1.52, 0.23), F('rug', 1.52, 1.5), F('sofa3', 1.51, 2.58, 180), F('dining4', 3.82, 2.16, 0), F('counter', 2.73, 4.175, 180), F('chair', 2.73, 3.78, 180),
       L('ceiling', 1.52, 1.6), L('pendant', 3.82, 2.16), L('downlight', 5.0, 1.2), L('downlight', 6.6, 1.2), L('downlight', 5.0, 2.85), L('downlight', 6.6, 2.85), L('downlight', 2.6, 3.7),
       E('aircon', 9, 3.22, null), E('tv', 0, 1.52, 0.25), E('lan', 0, 3.43, 0.25), E('outlet', 0, 3.27, 0.25), E('outlet', 9, 2.98, 0.25),
       E('outlet', 6, 1.67, 0.25), E('outlet', 5, 0.69, 0.25),
@@ -526,7 +526,7 @@ const SIDES = ['A', 'B'];
 export function createInterior(root, { onPlan } = {}) {
   let state;
   try { state = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { state = null; }
-  if (!state || !state.rooms) state = { room: 'ldk', tab: 'wall', night: false, rooms: {}, migr: 3 }; // 新しい状態は今の初期配置のまま（下の移行は古い保存データだけ）
+  if (!state || !state.rooms) state = { room: 'ldk', tab: 'wall', night: false, rooms: {}, migr: 4 }; // 新しい状態は今の初期配置のまま（下の移行は古い保存データだけ）
   for (const r of ROOMS) if (!state.rooms[r.id]) state.rooms[r.id] = structuredClone(DEFAULT_ROOMS[r.id]);
   // 旧配置からの移行（1回だけ）：LDK のソファ・ローテーブルを前に出して後ろに通路を確保し、ラグは外す
   if (!(state.migr >= 1)) {
@@ -548,6 +548,11 @@ export function createInterior(root, { onPlan } = {}) {
   if (!(state.migr >= 3)) {
     for (const rooms of [state.rooms, state.roomsB]) for (const r of ROOMS) rooms[r.id].items = structuredClone(DEFAULT_ROOMS[r.id].items);
     state.migr = 3;
+  }
+  // 図面の配置に置き換えたときに消えた、南側の収納の横のカウンターテーブルと椅子を戻す（1回だけ）
+  if (!(state.migr >= 4)) {
+    for (const rooms of [state.rooms, state.roomsB]) { const it = rooms.ldk.items; if (!it.some(o => o.type === 'counter')) it.push({ type: 'counter', x: 2.73, z: 4.175, rot: 180 }, { type: 'chair', x: 2.73, z: 3.78, rot: 180 }); }
+    state.migr = 4;
   }
   if (state.mode !== 'compare') state.mode = 'single';
   if (state.edit !== 'B') state.edit = 'A';
