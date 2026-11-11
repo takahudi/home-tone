@@ -22,7 +22,8 @@ const ROOMS = [
       { k: 'shelf', a: [6.44, 0.5], b: [7.23, 0.5], name: '収納（扉なし・可動棚）', depth: 0.45, h: 2.2 },
       // テレビ横：北の壁から出る袖壁（冷蔵庫との間仕切り）と、その西面に棚柱を付けた扉なしの可動棚（収納・小）。2階造作・設備図より
       { k: 'fin', a: [3.59, 0], b: [3.68, 0], depth: 0.7, name: 'テレビ横の袖壁' },
-      { k: 'rack', a: [3.265, 0], b: [3.59, 0], depth: 0.65, name: '収納（小・扉なし・可動棚）' },
+      // DK側（南面）の壁 side は図面になく、施主が追加を検討中のもの。袖壁の先端に揃え、その分だけ棚の奥行を詰めた
+      { k: 'rack', a: [3.265, 0], b: [3.59, 0], depth: 0.61, side: 0.09, name: '収納（小・扉なし・可動棚）' },
     ],
     fixed: [
       { type: 'island', x: 5.935, z: 2.04, rot: 0 }, // 東の端（コンロ側）を東の壁に付けた壁付けフラット
@@ -729,6 +730,12 @@ export function createInterior(root, { onPlan } = {}) {
             const D = o.depth, sh = std({ color: '#f1efe9', roughness: 0.6 });
             for (const z of [0.06, D - 0.06]) box(g, 0.012, CH - 0.2, 0.025, w / 2 - 0.006, (CH - 0.2) / 2 + 0.1, z * sz, MAT.metal, false);
             for (const y of [0.45, 0.8, 1.15, 1.5, 1.85]) box(g, w - 0.015, 0.02, D - 0.02, -0.0075, y, (D / 2) * sz, sh);
+            if (o.side) { // 手前側をふさぐ壁（天井まで）と、室内に見える2面の巾木。開口は -x 側だけになる
+              const T = o.side, zc = (D + T / 2) * sz;
+              meterUV(box(g, w, CH, T, 0, CH / 2, zc, mats.wall).geometry, w, CH);
+              box(g, w, 0.06, 0.012, 0, 0.03, (D + T + 0.006) * sz, mats.base, false);
+              box(g, 0.012, 0.06, T + 0.012, -w / 2 - 0.006, 0.03, (D + T / 2 + 0.006) * sz, mats.base, false);
+            }
           } else if (o.k === 'door' || o.k === 'closet') {
             const n = o.k === 'closet' ? Math.max(2, Math.round(w / 0.45)) : 1, pw = w / n;
             const dz = (o.k === 'door' ? -0.03 : 0.02) * sz, front = dz + 0.0175 * sz;
