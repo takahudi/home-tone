@@ -115,10 +115,23 @@ const WOODC = [['natural', 'ナチュラル', '#c49a6c'], ['walnut', 'ウォー�
   ['ash', 'ホワイトアッシュ', '#d9c9ae'], ['oak', 'ナチュラルオーク', '#c4aa86'], ['greige', 'グレージュオーク', '#ae9f8a'], ['smoke', 'スモークオーク', '#806c5b'],
   ['charcoal', 'チャコールオーク', '#4a4540'], ['ivory', 'アイボリー', '#e6e0d3']]
   .map(([id, name, hex]) => ({ id, name, hex }));
-// キッチン・カップボードの扉（本体も同色）：カタログ「扉シリーズ」のリッチマテリアル以外。img はカタログの色見本
-const KDOOR_SERIES = [['Z', 'Zシリーズ', 'Grade 2・石目'], ['Y', 'Yシリーズ', 'Grade 2・木目'], ['N', 'Nシリーズ', 'Grade 2・木目'], ['S', 'Sシリーズ', 'Grade 2・白無地'],
+// キッチン・カップボードの扉（本体も同色）：カタログ「扉シリーズ」（P.56〜59）。img はカタログの色見本。
+// 鏡面のハイグレインは映り込みのない左上だけ、クラフトオークは框の線を避けて鏡板の部分だけを切り出した（框の段差は形にしていない）。
+// シャインカラーは無地の鏡面で、見本の映り込みのグラデーションを繰り返すと縞になるので画像は使わず色だけ。114色のうちカタログに載る8色
+const KDOOR_SERIES = [['HG', 'ハイグレイン', 'Grade 6・天然木 鏡面'], ['CO', 'クラフトオーク', 'Grade 5・天然木 框扉'], ['RW', 'リアルウッド', 'Grade 5・天然木'],
+  ['TC', 'テノールカラー', 'Grade 4・塗装'], ['SC', 'シャインカラー', 'Grade 4・鏡面塗装'], ['RF', 'リュッケファーブ', 'Grade 3・塗装'], ['RM', 'リッチマテリアル', 'Grade 3・大柄'],
+  ['Z', 'Zシリーズ', 'Grade 2・石目'], ['Y', 'Yシリーズ', 'Grade 2・木目'], ['N', 'Nシリーズ', 'Grade 2・木目'], ['S', 'Sシリーズ', 'Grade 2・白無地'],
   ['D', 'Dシリーズ', 'Grade 2・鏡面'], ['Q', 'Qシリーズ', 'Grade 2・鏡面木目'], ['J', 'Jシリーズ', 'Grade 1・木目'], ['B', 'Bシリーズ', 'Grade 1・マット']];
 const KDOORS = [
+  ['hg-bengara', 'HG', '紅殻', '#61171e', 1], ['hg-sumizome', 'HG', '墨染', '#26241b', 1],
+  ['co-white', 'CO', 'ホワイトクラフト', '#dcd2bd'], ['co-green', 'CO', 'グリーンクラフト', '#7b806c'], ['co-smoky', 'CO', 'スモーキークラフト', '#79776e'], ['co-moss', 'CO', 'モスクラフト', '#354236'],
+  ['rw-oak', 'RW', 'リアルオーク', '#b78453'], ['rw-walnut', 'RW', 'リアルウォルナット', '#3c241b'],
+  ['tc-white', 'TC', 'ソルティホワイト', '#f8f6f0'], ['tc-gray', 'TC', 'メテオダークグレー', '#585550'], ['tc-brown', 'TC', 'バーストブラウン', '#4d3f3b'], ['tc-black', 'TC', 'アイアンブラック', '#373739'],
+  ['sc-seppaku', 'SC', '雪白', '#f5f3ee', 1, 0], ['sc-kinari', 'SC', '生成色', '#dacfbd', 1, 0], ['sc-ginpaku', 'SC', '銀箔', '#c5b9ac', 1, 0], ['sc-usushakudo', 'SC', '薄赤銅色', '#c1a59a', 1, 0],
+  ['sc-kokikurenai', 'SC', '深紅', '#7b1f2c', 1, 0], ['sc-rurikon', 'SC', '瑠璃紺', '#163651', 1, 0], ['sc-birodo', 'SC', '天鵞絨', '#063d35', 1, 0], ['sc-rokoku', 'SC', '呂黒', '#080308', 1, 0],
+  ['rf-white', 'RF', 'ホワイト', '#f0ede3'], ['rf-lgray', 'RF', 'ライトグレー', '#a8a6ab'], ['rf-lbeige', 'RF', 'ライトベージュ', '#b1a9a2'], ['rf-dbeige', 'RF', 'ダークベージュ', '#908575'], ['rf-pink', 'RF', 'ピンク', '#ad9688'],
+  ['rf-terracotta', 'RF', 'テラコッタ', '#a37967'], ['rf-dgray', 'RF', 'ダークグレー', '#4f524e'], ['rf-navy', 'RF', 'ネイビー', '#49525a'], ['rf-sage', 'RF', 'セージ', '#969982'], ['rf-olive', 'RF', 'オリーブ', '#687067'],
+  ['rm-lbstone', 'RM', 'ライトベイストーン', '#d1cdcd'], ['rm-selbe', 'RM', 'セルベライトベージュ', '#cfbdae'], ['rm-stucco', 'RM', 'メタリックスタッコ', '#6f6964'], ['rm-navy', 'RM', 'ネイビーソーン', '#46454e'],
   ['z-cream', 'Z', 'クリームストーン', '#f1e5da'], ['z-mortar', 'Z', 'スムースモルタル', '#8f8a8b'], ['z-gray', 'Z', 'グレーストーン', '#676561'], ['z-gold', 'Z', 'エイジングゴールド', '#554434'], ['z-leather', 'Z', 'ダークレザー', '#463c37'],
   ['y-white', 'Y', 'リファインドホワイト', '#e8ddd2'], ['y-mocha', 'Y', 'リファインドモカ', '#8e7d70'],
   ['n-oak', 'N', 'ライトオーク', '#d3ad84'], ['n-teak', 'N', 'ミディアムチーク', '#8e6446'], ['n-walnut', 'N', 'ダークウォルナット', '#4f4340'],
@@ -127,7 +140,7 @@ const KDOORS = [
   ['q-white', 'Q', 'グロウホワイト', '#f1e3d1', 1], ['q-medium', 'Q', 'グロウミディアム', '#694a35', 1], ['q-dark', 'Q', 'グロウダーク', '#3d3330', 1],
   ['j-oak', 'J', 'チョークドオーク', '#e8ddc7'], ['j-elm', 'J', 'グレイッシュエルム', '#bfb1a6'],
   ['b-linen', 'B', 'リネンベージュ', '#d4cfcc'], ['b-ice', 'B', 'アイスブルー', '#bdccd1'], ['b-mimosa', 'B', 'ミモザイエロー', '#f4c575'], ['b-slate', 'B', 'スレートグレー', '#6d6d6c'],
-].map(([id, series, name, hex, gloss]) => ({ id, series, name, hex, gloss: !!gloss, img: `interior/kitchen/${id}.jpg`, mpp: 0.4 / 435 }));
+].map(([id, series, name, hex, gloss, img = 1]) => ({ id, series, sname: KDOOR_SERIES.find(s => s[0] === series)[1], name, hex, gloss: !!gloss, img: img ? `interior/kitchen/${id}.jpg` : null, mpp: 0.4 / 435 }));
 // 天板：人造大理石「テノール」カウンター（Grade 5）。img はカタログ P.54 の、シンクの縁が写った方の写真（右の拡大写真ではない）から、シンクを避けて切り出し、
 // 写真の照明ムラを均したもの。実寸は写真に写るシンクの角の丸み（約100px）を R60mm と見積もって決めた（1px ≒ 0.6mm）
 const KTOPS = [['tenor-white', 'ソルティホワイト', '#f3f3ea'], ['tenor-gray', 'メテオダークグレー', '#4f4c49'], ['tenor-brown', 'バーストブラウン', '#4f433b'], ['tenor-black', 'アイアンブラック', '#40403f']]
@@ -147,7 +160,8 @@ const KHANDLE = [['silver', 'シルバー', '#d4d6d8', 0.3, 0.3], ['black', 'ブ
 const KOPTS = [['hood', 'レンジフード', RHOOD], ['sink', 'シンク', KSINK], ['handle', '取っ手', KHANDLE]];
 const optMat = o => std({ color: o.hex, roughness: o.rough, metalness: o.metal });
 const KDOOR_ALIAS = { white: 's-silk', natural: 'n-oak', walnut: 'n-walnut', black: 'q-dark', gray: 'z-mortar' }; // 旧来の色指定からの置き換え
-const kdoorOf = id => colorOf(KDOORS, KDOOR_ALIAS[id] || id);
+// 未選択はクリームストーン（一覧の先頭はカタログ順のハイグレインなので colorOf の既定値には頼らない）
+const kdoorOf = id => KDOORS.find(o => o.id === (KDOOR_ALIAS[id] || id)) || KDOORS.find(o => o.id === 'z-cream');
 // 色見本の画像を、面の実寸（w×h m）に合わせて貼る（継ぎ目が目立たないよう反転しながら繰り返す）
 const SWATCH_IMG = {};
 let onTexLoad = () => {};
@@ -950,7 +964,7 @@ export function createInterior(root, { onPlan } = {}) {
   const kchip = (type, part, o, cur, title) => `<button type="button" class="chip" data-kt="${type}" data-kp="${part}" data-kc="${o.id}" aria-pressed="${cur === o.id}" title="${title}" aria-label="${title}" style="background:${o.hex}${o.img ? ` url(${o.img}) center/cover` : ''}"></button>`;
   function kitChips(type) {
     const cd = kitCur(type, 'door'), ct = kitCur(type, 'top');
-    return `<div class="in-kit"><div class="in-kit-h">扉・本体<span>${kdoorOf(cd).series}シリーズ ${kdoorOf(cd).name}</span></div>
+    return `<div class="in-kit"><div class="in-kit-h">扉・本体<span>${kdoorOf(cd).sname} ${kdoorOf(cd).name}</span></div>
       ${KDOOR_SERIES.map(([k, label, note]) => `<div class="in-kser"><small>${label}（${note}）</small><div class="colors">${KDOORS.filter(o => o.series === k).map(o => kchip(type, 'door', o, cd, `${label} ${o.name}`)).join('')}</div></div>`).join('')}
       <div class="in-kit-h">天板<span>${colorOf(topsOf(type), ct).name}</span></div>
       <div class="colors">${topsOf(type).map(o => kchip(type, 'top', o, ct, o.name)).join('')}</div>
