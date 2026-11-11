@@ -20,6 +20,9 @@ const ROOMS = [
       { k: 'pass', a: [6.41, 3.49], b: [7.28, 3.49], name: '階段（上り）' },
       { k: 'closet', a: [0.08, 3.8], b: [1.74, 3.8], name: '収納' },
       { k: 'shelf', a: [6.44, 0.5], b: [7.23, 0.5], name: '収納（扉なし・可動棚）', depth: 0.45, h: 2.2 },
+      // テレビ横：北の壁から出る袖壁（冷蔵庫との間仕切り）と、その西面に棚柱を付けた扉なしの可動棚（収納・小）。2階造作・設備図より
+      { k: 'fin', a: [3.59, 0], b: [3.68, 0], depth: 0.7, name: 'テレビ横の袖壁' },
+      { k: 'rack', a: [3.265, 0], b: [3.59, 0], depth: 0.65, name: '収納（小・扉なし・可動棚）' },
     ],
     fixed: [
       { type: 'island', x: 5.935, z: 2.04, rot: 0 }, // 東の端（コンロ側）を東の壁に付けた壁付けフラット
@@ -661,7 +664,7 @@ export function createInterior(root, { onPlan } = {}) {
       // 壁
       for (const e of ed) {
         const ops = room.open.map(o => { const u0 = onEdge(e, o.a), u1 = onEdge(e, o.b); return u0 != null && u1 != null ? { ...o, u0: Math.min(u0, u1), u1: Math.max(u0, u1) } : null; }).filter(Boolean);
-        const holes = ops.filter(o => o.k !== 'closet').map(o => ({ u0: o.u0, u1: o.u1, y0: o.k === 'win' ? o.y0 : 0, y1: o.k === 'win' ? o.y1 : o.k === 'pass' ? CH : o.h || 2.0 }));
+        const holes = ops.filter(o => !['closet', 'fin', 'rack'].includes(o.k)).map(o => ({ u0: o.u0, u1: o.u1, y0: o.k === 'win' ? o.y0 : 0, y1: o.k === 'win' ? o.y1 : o.k === 'pass' ? CH : o.h || 2.0 }));
         const us = new Set([0, e.len]), ys = new Set([0, CH]);
         for (const h of holes) { us.add(h.u0); us.add(h.u1); ys.add(h.y0); ys.add(h.y1); }
         const U = [...us].sort((a, b) => a - b), Y = [...ys].sort((a, b) => a - b), P = [], N = [], T = [];
@@ -715,6 +718,17 @@ export function createInterior(root, { onPlan } = {}) {
             }
             for (const x of [-w / 2 - 0.02, w / 2 + 0.02]) box(g, 0.04, H + 0.04, 0.012, x, H / 2 + 0.02, 0.006 * sz, mats.dframe, false);
             box(g, w + 0.08, 0.04, 0.012, 0, H + 0.02, 0.006 * sz, mats.dframe, false);
+          } else if (o.k === 'fin') {
+            // 室内側に出る袖壁（天井まで）と、その3面の巾木
+            const D = o.depth;
+            meterUV(box(g, w, CH, D, 0, CH / 2, D / 2 * sz, mats.wall).geometry, D, CH);
+            for (const x of [-w / 2 - 0.006, w / 2 + 0.006]) box(g, 0.012, 0.06, D, x, 0.03, D / 2 * sz, mats.base, false);
+            box(g, w + 0.024, 0.06, 0.012, 0, 0.03, (D + 0.006) * sz, mats.base, false);
+          } else if (o.k === 'rack') {
+            // 壁から室内側に出る扉なしの可動棚。棚柱は袖壁側（ローカル +x）の面に前後2本
+            const D = o.depth, sh = std({ color: '#f1efe9', roughness: 0.6 });
+            for (const z of [0.06, D - 0.06]) box(g, 0.012, CH - 0.2, 0.025, w / 2 - 0.006, (CH - 0.2) / 2 + 0.1, z * sz, MAT.metal, false);
+            for (const y of [0.45, 0.8, 1.15, 1.5, 1.85]) box(g, w - 0.015, 0.02, D - 0.02, -0.0075, y, (D / 2) * sz, sh);
           } else if (o.k === 'door' || o.k === 'closet') {
             const n = o.k === 'closet' ? Math.max(2, Math.round(w / 0.45)) : 1, pw = w / n;
             const dz = (o.k === 'door' ? -0.03 : 0.02) * sz, front = dz + 0.0175 * sz;
