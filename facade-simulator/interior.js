@@ -22,8 +22,8 @@ const ROOMS = [
       { k: 'shelf', a: [6.44, 0.5], b: [7.23, 0.5], name: '収納（扉なし・可動棚）', depth: 0.45, h: 2.2 },
       // テレビ横：北の壁から出る袖壁（冷蔵庫との間仕切り）と、その西面に棚柱を付けた扉なしの可動棚（収納・小）。2階造作・設備図より
       { k: 'fin', a: [3.59, 0], b: [3.68, 0], depth: 0.7, name: 'テレビ横の袖壁' },
-      // DK側（南面）の壁 side は図面になく、施主が追加を検討中のもの。袖壁の先端に揃え、その分だけ棚の奥行を詰めた
-      { k: 'rack', a: [3.265, 0], b: [3.59, 0], depth: 0.61, side: 0.09, name: '収納（小・扉なし・可動棚）' },
+      // DK側（南面）の壁 side は図面になく、施主が追加を検討中のもの（rs.rackWall で切り替え）。壁は袖壁の先端に揃え、その分だけ棚の奥行を詰める
+      { k: 'rack', a: [3.265, 0], b: [3.59, 0], depth: 0.65, side: { to: 0.7, t: 0.09 }, name: '収納（小・扉なし・可動棚）' },
     ],
     fixed: [
       { type: 'island', x: 5.935, z: 2.04, rot: 0 }, // 東の端（コンロ側）を東の壁に付けた壁付けフラット
@@ -727,11 +727,11 @@ export function createInterior(root, { onPlan } = {}) {
             box(g, w + 0.024, 0.06, 0.012, 0, 0.03, (D + 0.006) * sz, mats.base, false);
           } else if (o.k === 'rack') {
             // 壁から室内側に出る扉なしの可動棚。棚柱は袖壁側（ローカル +x）の面に前後2本
-            const D = o.depth, sh = std({ color: '#f1efe9', roughness: 0.6 });
+            const wall = o.side && rs.rackWall !== false, D = wall ? o.side.to - o.side.t : o.depth, sh = std({ color: '#f1efe9', roughness: 0.6 });
             for (const z of [0.06, D - 0.06]) box(g, 0.012, CH - 0.2, 0.025, w / 2 - 0.006, (CH - 0.2) / 2 + 0.1, z * sz, MAT.metal, false);
             for (const y of [0.45, 0.8, 1.15, 1.5, 1.85]) box(g, w - 0.015, 0.02, D - 0.02, -0.0075, y, (D / 2) * sz, sh);
-            if (o.side) { // 手前側をふさぐ壁（天井まで）と、室内に見える2面の巾木。開口は -x 側だけになる
-              const T = o.side, zc = (D + T / 2) * sz;
+            if (wall) { // 手前側をふさぐ壁（天井まで）と、室内に見える2面の巾木。開口は -x 側だけになる
+              const T = o.side.t, zc = (D + T / 2) * sz;
               meterUV(box(g, w, CH, T, 0, CH / 2, zc, mats.wall).geometry, w, CH);
               box(g, w, 0.06, 0.012, 0, 0.03, (D + T + 0.006) * sz, mats.base, false);
               box(g, 0.012, 0.06, T + 0.012, -w / 2 - 0.006, 0.03, (D + T / 2 + 0.006) * sz, mats.base, false);
@@ -1044,6 +1044,7 @@ export function createInterior(root, { onPlan } = {}) {
         <span>ハンドル</span><div class="seg">${DKNOB.map(o => `<button type="button" data-dknob="${o.id}" aria-pressed="${colorOf(DKNOB, rs.doorKnob).id === o.id}">${o.name}</button>`).join('')}</div></div></section>
       ${(room.fixed || []).filter(f => CAT[f.type].kit).map(f => `<details class="in-fl in-kitsec" data-ksec="${f.type}"${kitOpen.has(f.type) ? ' open' : ''}><summary><b>${CAT[f.type].name.replace(/（.*）/, '')}</b><span>${kitDesc(f.type)}</span></summary>${kitChips(f.type)}</details>`).join('')}
       ${(room.fixed || []).some(f => f.type === 'fridge') ? `<div class="in-dopt"><span>冷蔵庫</span><small class="note">Panasonic NR-E45RY3</small><div class="seg">${FRIDGE.map(o => `<button type="button" data-kt="fridge" data-kp="door" data-kc="${o.id}" aria-pressed="${colorOf(FRIDGE, rs.kitchen && rs.kitchen.fridge).id === o.id}">${o.short}</button>`).join('')}</div></div>` : ''}
+      ${room.open.some(o => o.side) ? `<div class="in-dopt"><span>テレビ横の棚のDK側の壁</span><small class="note">図面にはない、検討中の壁</small><div class="seg">${[['1', 'あり（コの字）'], ['0', 'なし（図面どおり）']].map(([k, n]) => `<button type="button" data-rackwall="${k}" aria-pressed="${(rs.rackWall !== false) === (k === '1')}">${n}</button>`).join('')}</div></div>` : ''}
       <button type="button" class="btn small" id="copyAll">この部屋の壁紙・床・天井・ドアを全部屋に反映（プラン${state.edit}）</button>`;
     } else {
       const g = state.tab, list = Object.entries(CAT).filter(([, c]) => c.g === g && (g !== 'k'));
@@ -1075,6 +1076,7 @@ export function createInterior(root, { onPlan } = {}) {
     else if (d.door) { rs.door = d.door; v.applyMats(); }
     else if (d.dframe) { rs.doorFrame = d.dframe; v.applyDoor(); }
     else if (d.dknob) { rs.doorKnob = d.dknob; v.applyDoor(); }
+    else if (d.rackwall) { rs.rackWall = d.rackwall === '1'; v.buildRoom(); }
     else if (d.ed) { setEditing(d.ed === '1'); return; }
     else if (d.kt) { setKitchen(d.kt, d.kp, d.kc); return; }
     else if (b.id === 'acPick') { pickingAccent = !pickingAccent; }
@@ -1133,6 +1135,7 @@ export function createInterior(root, { onPlan } = {}) {
           `室内ドア：${doorLabel(doorOf(rs.door))}・枠${colorOf(DFRAME, rs.doorFrame).name}・ハンドル${colorOf(DKNOB, rs.doorKnob).name}／照明色：${colorOf(LIGHTCOL, rs.lightCol).name}`,
           ...(room.fixed || []).filter(f => CAT[f.type].kit).map(f => `${CAT[f.type].name.replace(/（.*）/, '')}：${kitDesc(f.type, rs)}`),
           ...((room.fixed || []).some(f => f.type === 'fridge') ? [`冷蔵庫：${colorOf(FRIDGE, rs.kitchen && rs.kitchen.fridge).name}`] : []),
+          ...(room.open.some(o => o.side) ? [`テレビ横の棚のDK側の壁：${rs.rackWall !== false ? 'あり（コの字）' : 'なし'}`] : []),
           countText(rs)];
         return { s, img: cp, lines };
       });
